@@ -665,44 +665,25 @@
                                         </Border>
                                         <Border Grid.Row="2" Panel.ZIndex="4" Grid.RowSpan="2">
                                             <Canvas
-                                x:Name="Z_Parid_clipCanvas"
-                                Background="#FF2B3034" Margin="0,10,0,10">
-                                                <StackPanel
-                                    x:Name="Z_Parid_clipStackPanel"
-                                    Canvas.Left="0"
-                                    Canvas.Top="2"
-                                    Height="13"
-                                    Orientation="Horizontal">
-                                                    <Border
-                                        x:Name="Z_Parid_clipStartBorder"
-                                        Width="5"
-                                        Background="#FF4500"
-                                        BorderBrush="Black"
-                                        BorderThickness="0,0,1,0"
-                                        CornerRadius="2,0,0,2"
-                                        Cursor="SizeWE" />
-                                                    <Border
-                                        x:Name="Z_Parid_clipAreaBorder"
-                                        Width="100"
-                                        Background="#FF777777"
-                                        Cursor="Hand"
-                                        ToolTip="Scroll" />
-                                                    <Border
-                                        x:Name="Z_Parid_clipEndBorder"
-                                        Width="5"
-                                        Background="#FF4500"
-                                        BorderBrush="Black"
-                                        BorderThickness="1,0,0,0"
-                                        CornerRadius="0,2,2,0"
-                                        Cursor="SizeWE" />
-                                                </StackPanel>
+                                                 x:Name="Z_Parid_clipCanvas"
+                                                 Background="#FF2B3034" Margin="0,10,0,10">
+                                                <Canvas
+                                                    x:Name="Z_Parid_clipStackPanel">
+                                                    <Canvas.Resources>
+                                                        <Style TargetType="{x:Type Path}">
+                                                            <Setter Property="Fill" Value="AliceBlue" />
+                                                            <Setter Property="Stretch" Value="Fill"/>
+                                                            <Setter Property="Height" Value="50"/>
+                                                        </Style>
+                                                    </Canvas.Resources>
+                                                </Canvas>
                                                 <TextBlock
-                                    x:Name="Z_Parid_currentTime"
-                                    Background="#141414"
-                                    FontSize="11"
-                                    Foreground="#D2931A"
-                                    Text=""
-                                    Visibility="Collapsed" />
+                                                    x:Name="Z_Parid_currentTime"
+                                                    Background="#141414"
+                                                    FontSize="11"
+                                                    Foreground="#D2931A"
+                                                    Text=""
+                                                    Visibility="Collapsed" />
                                             </Canvas>
                                         </Border>
                                         <Canvas
