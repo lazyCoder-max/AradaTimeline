@@ -59,25 +59,5 @@ namespace AradaTimeline.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] alpha_flag_10px {
-            get {
-                object obj = ResourceManager.GetObject("alpha_flag_10px", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] delete_10px {
-            get {
-                object obj = ResourceManager.GetObject("delete_10px", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }
