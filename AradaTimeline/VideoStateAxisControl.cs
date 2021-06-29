@@ -105,14 +105,6 @@ namespace AradaTimeline
         // Using a DependencyProperty as the backing store for ScrollValue.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ScrollValueProperty =
             DependencyProperty.Register("ScrollValue", typeof(double), typeof(VideoStateAxisControl), new PropertyMetadata(12.0));
-
-
-        public static readonly DependencyProperty HistoryVideoSourceProperty = DependencyProperty.Register(
-            "HisVideoSources",
-            typeof(ObservableCollection<VideoStateItem>),
-            typeof(VideoStateAxisControl),
-            new PropertyMetadata(new ObservableCollection<VideoStateItem>(), OnHistoryVideoSourcesChanged));
-
         public static readonly DependencyProperty StartTimeProperty = DependencyProperty.Register(
             "StartTime",
             typeof(TimeSpan),
@@ -178,16 +170,6 @@ namespace AradaTimeline
             get { return (TimeSpan)GetValue(AxisTimeProperty); }
             set { SetValue(AxisTimeProperty, value); }
         }
-
-        /// <summary>
-        /// Historical video source list
-        /// </summary>
-        public ObservableCollection<VideoStateItem> HisVideoSources
-        {
-            get { return (ObservableCollection<VideoStateItem>)GetValue(HistoryVideoSourceProperty); }
-            set { SetValue(HistoryVideoSourceProperty, value); }
-        }
-
         /// <summary>
         /// Width of the time axis occupied per hour
         /// </summary>
@@ -373,24 +355,6 @@ namespace AradaTimeline
                 AxisOb.InitializeAxis();
             }
         }
-
-        /// <summary>
-        /// Historical video source-change
-        /// </summary>
-        /// <param name="d"></param>
-        /// <param name="e"></param>
-        private static void OnHistoryVideoSourcesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            VideoStateAxisControl AxisOb = d as VideoStateAxisControl;
-            if (AxisOb.HisVideoSources != null && AxisOb.HisVideoSources.Count() > 0)
-            {
-                AxisOb.InitializeAxis();
-            }
-            AxisOb.HisVideoSources.CollectionChanged += (s, o) =>
-            {
-                AxisOb.AddHisPie();
-            };
-        }
         /// <summary>
         /// Pointer time refresh pointer position
         /// </summary>
@@ -450,7 +414,6 @@ namespace AradaTimeline
             else
             {
                 RefreshTimeline(Drawar, EventArgs);
-                AddHisPie();
                 InitializationNewtTimeLine();
             }
         }
@@ -558,8 +521,6 @@ namespace AradaTimeline
         private void InitializeAxis()
         {
             AddTimeTextBlock();
-            AddTimeLine();
-            AddHisPie();
             InitializationNewtTimeLine();
         }
         /// <summary>
@@ -712,32 +673,6 @@ namespace AradaTimeline
                             Margin = new Thickness(Dial_Cell_MiS * i - 30, 2, 0, 0)
                         }));
                 }
-            }
-        }
-
-        /// <summary>
-        /// Initialize the time scale
-        /// </summary>
-        /// <param name="HaveMathTextBlock">The number of time scales that need to be filled</param>
-        private void AddTimeLine()
-        {
-            if (_axisCanvas != null)
-            {
-                _axisCanvas.Children.Clear();
-                for (int i = 0; i < 24; i++)
-                {
-                    _axisCanvas.Children.Add(new Line()
-                    {
-                        X1 = Dial_Cell_H * i,
-                        Y1 = 0,
-                        X2 = Dial_Cell_H * i,
-                        Y2 = 25,
-                        StrokeThickness = 1
-                    });
-                    var result = Dial_Cell_H * i;
-                    //DrawMinuiteLines(result);
-                }
-
             }
         }
         /// <summary>
@@ -973,42 +908,6 @@ namespace AradaTimeline
         }
         #endregion
         /// <summary>
-        /// Initialize the timeline
-        /// </summary>
-        private void AddHisPie()
-        {
-            if (_videoHistoryPanel != null && HisVideoSources != null && HisVideoSources.Count() > 0)
-            {
-                _videoHistoryPanel.Children.Clear();
-                foreach (var item in HisVideoSources)
-                {
-                    Dictionary<KeyValuePair<int, int>, bool> dic = MathToTimeSp(item.AxisHistoryTimeList);
-                    DisplayData(dic);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Calculate and fill timeline query results
-        /// </summary>
-        private void DisplayData(Dictionary<KeyValuePair<int, int>, bool> dic)
-        {
-            TimeSpan serTime = StartTime;
-            Canvas TimeCanvas = new Canvas() { Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification };
-            foreach (var item in dic)
-            {
-                TimeCanvas.Children.Add(new Rectangle()
-                {
-                    Width = item.Key.Value * Dial_Cell_M,
-                    Height = item.Value ? 16 : 0,
-                    Margin = new Thickness(serTime.Hours * Dial_Cell_H + serTime.Minutes * Dial_Cell_M + serTime.Seconds * Dial_Cell_S + serTime.Milliseconds * Dial_Cell_MiS, 0, 0, 0)
-                });
-                serTime = serTime.Add(new TimeSpan(0, item.Key.Value,0));
-            }
-            _videoHistoryPanel.Children.Add(TimeCanvas);
-        }
-
-        /// <summary>
         /// Calculate the intermittent time axis
         /// </summary>
         /// <param name="region"></param>
@@ -1026,36 +925,6 @@ namespace AradaTimeline
             }
             return dic;
         }
-
-        /// <summary>
-        /// Create the top-level data template container
-        /// </summary>
-        /// <returns></returns>
-        private FrameworkElementFactory CreateTopElement()
-        {
-            FrameworkElementFactory frameworkElementFactory = new FrameworkElementFactory(typeof(StackPanel));
-            frameworkElementFactory.SetValue(StackPanel.HeightProperty, 16.00);
-            frameworkElementFactory.SetValue(StackPanel.MarginProperty, new Thickness(0, 4, 5, 0));
-            frameworkElementFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-            return frameworkElementFactory;
-        }
-
-        /// <summary>
-        /// Create a Path element template
-        /// </summary>
-        /// <param name="GeometryPath"></param>
-        /// <param name="ToolTipStr"></param>
-        /// <returns></returns>
-        private FrameworkElementFactory CreatePathElement(string GeometryPath, string ToolTipStr)
-        {
-            FrameworkElementFactory path = new FrameworkElementFactory(typeof(Path));
-            path.SetValue(CursorProperty, Cursors.Hand);
-            path.SetValue(Path.DataProperty, Geometry.Parse(GeometryPath));
-            path.SetValue(Path.FillProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#c8c7c3")));
-            path.SetValue(ToolTipProperty, ToolTipStr);
-            return path;
-        }
-
         /// <summary>
         /// Get instance items
         /// </summary>
@@ -1154,24 +1023,9 @@ namespace AradaTimeline
         public VideoStateAxisRoutedEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source) { }
 
         /// <summary>
-        /// Event type
-        /// </summary>
-        public VideoAxisActionType ActionType { get; set; }
-
-        /// <summary>
-        /// Is the camera selected
-        /// </summary>
-        public bool CameraChecked { get; set; }
-
-        /// <summary>
         /// Pointer time
         /// </summary>
         public TimeSpan TimeLine { get; set; }
-
-        /// <summary>
-        /// Is there a video in the download or collection range
-        /// </summary>
-        public bool DownAndFavoirteHaveVideo { get; set; }
     }
     /// <summary>
     /// Video parameter class
@@ -1196,17 +1050,6 @@ namespace AradaTimeline
     /// <summary>
     /// Timeline control event type
     /// </summary>
-    public enum VideoAxisActionType
-    {
-        [Description("Download")]
-        Dwon,
-
-        [Description("Favorite")]
-        Favorite,
-
-        [Description("Open")]
-        Open
-    }
 
     /// <summary>
     /// Timeline object
