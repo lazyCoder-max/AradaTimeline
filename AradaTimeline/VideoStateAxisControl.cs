@@ -865,6 +865,46 @@ namespace AradaTimeline
                 _clip.Children.Add(clip.Left);
                 _clip.Children.Add(clip.Middle);
                 _clip.Children.Add(clip.Right);
+                ClipStartTimeChanged(clip.StartingTime);
+                ClipEndTimeChanged(clip);
+            }
+        }
+
+        #endregion
+        #region Clip Setting
+        /// <summary>
+        /// Recalculate the left coordinate of the clip bar based on the clip time
+        /// </summary>
+        private void ClipStartTimeChanged(TimeSpan dt)
+        {
+            TimeSpan ts = dt - StartTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && _clip != null)
+            {
+                double left = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
+                _clip.Margin = new Thickness(left, 0, 0, 0);
+            }
+        }
+
+        /// <summary>
+        /// Recalculate the width of the clip bar based on the clip time
+        /// </summary>
+        /// <param name="dt"></param>
+        private void ClipEndTimeChanged(Clip clip)
+        {
+            TimeSpan ts = clip.EndingTime - StartTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && clip.Middle != null)
+            {
+                double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
+                if(width>0)
+                {
+                    clip.Middle.Width = width - 10;
+                    clip.Length = width - 10;
+                }
+                else
+                {
+                    clip.Middle.Width = width;
+                    clip.Length = width;
+                }
             }
         }
         #endregion
@@ -1147,5 +1187,6 @@ namespace AradaTimeline
                 Margin = new Thickness(0, 50, 0, 0)
             };
         }
+
     }
 }
