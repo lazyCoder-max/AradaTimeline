@@ -32,10 +32,10 @@ namespace AradaTimeline
         }
         private void removeItm_Click(object sender, RoutedEventArgs e)
         {
-            VideoStateAxisControl._axisCanvasMarker.Children.Remove(SelectedPath);
             var index = Array.FindIndex(VideoStateAxisControl.Markers, val => val.Name == SelectedPath.Name);
             VideoStateAxisControl.Markers[index] = null;
             SaveBtn.Visibility = Visibility.Hidden;
+            VideoStateAxisControl._axisCanvasMarker.Children.Remove(SelectedPath);
         }
 
         private void setStartingItm_Checked(object sender, RoutedEventArgs e)

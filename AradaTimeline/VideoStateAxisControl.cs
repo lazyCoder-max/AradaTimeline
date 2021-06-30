@@ -42,6 +42,8 @@ namespace AradaTimeline
     [TemplatePart(Name = Parid_clipEndTimeTextBlock)]
     [TemplatePart(Name = Parid_cameraListBox)]
     [TemplatePart(Name = Parid_downButtonListBox)]
+    [TemplatePart(Name = Parid_clipTrim)]
+    [TemplatePart(Name = Parid_clipName)]
 
     #endregion
     public class VideoStateAxisControl : Control
@@ -60,7 +62,8 @@ namespace AradaTimeline
 
         private Canvas _clipCanvas;                         //Clip control moving container
         private StackPanel _clip;              //Clip slider container
-
+        private Canvas _clipTrim;
+        private TextBlock _clipName;
         private TextBlock _clipStateTimeTextBlock;     //Clip start time indicator
         private TextBlock _clipEndTimeTextBlock;      //Clip end time indicator
 
@@ -82,6 +85,8 @@ namespace AradaTimeline
         private const string Parid_videoHistoryPanel = "Z_videoHistoryPanel";
         private const string Parid_zoomSlider = "Z_Parid_zoomSlider";
         private const string Parid_clipCanvas = "Z_Parid_clipCanvas";
+        private const string Parid_clipTrim = "Z_Parid_clipTrim";
+        private const string Parid_clipName = "Z_Parid_clipName";
         private const string Parid_clipStartBorder = "Z_Parid_clipStartBorder";
         private const string Parid_clipAreaBorder = "Z_Parid_clipAreaBorder";
         private const string Parid_clipEndBorder = "Z_Parid_clipEndBorder";
@@ -121,6 +126,7 @@ namespace AradaTimeline
 
         #region Property 
         private List<Clip> ClipList { get; set; }
+        private List<Clip> TrimmedClipList { get; set; }
         private bool IsClipStartTimeCalculated { get; set; } = false;
         internal static VideoStateAxisControl VideoControl { get; set; }
         public Visibility SaveBtnVisibility { get; set; } = Visibility.Hidden;
@@ -377,6 +383,7 @@ namespace AradaTimeline
                 SizeChanged += delegate
                 {
                     InitializeAxis();
+
                 };
             };
         }
@@ -414,6 +421,7 @@ namespace AradaTimeline
                 RefreshTimeline(Drawar, EventArgs);
                 InitializationNewtTimeLine();
                 DrawClip(ClipList);
+                DrawTrimmedClip(TrimmedClipList);
                 DrawMarker();
             }
         }
@@ -520,8 +528,12 @@ namespace AradaTimeline
         /// </summary>
         private void InitializeAxis()
         {
-            AddTimeTextBlock();
+            IsClipStartTimeCalculated = false;
+            RefreshTimeline(Drawar, EventArgs);
             InitializationNewtTimeLine();
+            DrawClip(ClipList);
+            DrawTrimmedClip(TrimmedClipList);
+            DrawMarker();
         }
         /// <summary>
         /// Initialize pointer position
@@ -531,28 +543,6 @@ namespace AradaTimeline
             if (_timeLine != null && !double.IsNaN(Canvas.GetLeft(_timeLine)))
             {
                 RefreshTimeLineLeft(AxisTime);
-            }
-        }
-
-        /// <summary>
-        /// Initialize timescale text
-        /// </summary>
-        /// <param name="HaveMathTextBlock">The amount of time text that needs to be filled</param>
-        private void AddTimeTextBlock()
-        {
-            if (_axisCanvasTimeText != null)
-            {
-                _axisCanvasTimeText.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
-                _axisCanvasTimeText.Children.Clear();
-                for (int i = 0; i < 24; i++)
-                {
-                    _axisCanvasTimeText.Children.Add((
-                        new TextBlock()
-                        {
-                            Text = i.ToString().PadLeft(2, '0') + ":00:00:00",
-                            Margin = new Thickness(Dial_Cell_H * i-30, 2, 0, 0)
-                        }));
-                }
             }
         }
         #region Drawers
@@ -863,19 +853,22 @@ namespace AradaTimeline
         internal void DrawMarker()
         {
             _axisCanvasMarker.Children.Clear();
-            for(int i=0;i<2;i++)
+            if(Markers!=null)
             {
-                if(Markers[i]!=null)
+                for (int i = 0; i < Markers.Count(); i++)
                 {
-                    var left = Dial_Cell_H * (Markers[i].Time.Days == 1 ? 23 : Markers[i].Time.Hours) + Dial_Cell_M * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Minutes) + Dial_Cell_S * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Seconds) + Dial_Cell_MiS * (Markers[i].Time.Days == 1 ? 999 : Markers[i].Time.Milliseconds);
-                    var path = new Path()
+                    if (Markers[i] != null)
                     {
-                        Data = Geometry.Parse(GeometryMarker),
-                        Margin = new Thickness(left, 2, 0, 0),
-                        Name = Markers[i].Name
-                    };
-                    _axisCanvasMarker.Children.Add(path);
-                    _axisCanvasMarker.RegisterName(path.Name, path);
+                        var left = Dial_Cell_H * (Markers[i].Time.Days == 1 ? 23 : Markers[i].Time.Hours) + Dial_Cell_M * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Minutes) + Dial_Cell_S * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Seconds) + Dial_Cell_MiS * (Markers[i].Time.Days == 1 ? 999 : Markers[i].Time.Milliseconds);
+                        var path = new Path()
+                        {
+                            Data = Geometry.Parse(GeometryMarker),
+                            Margin = new Thickness(left, 2, 0, 0),
+                            Name = Markers[i].Name
+                        };
+                        _axisCanvasMarker.Children.Add(path);
+                        _axisCanvasMarker.RegisterName(path.Name, path);
+                    }
                 }
             }
         }
@@ -885,22 +878,51 @@ namespace AradaTimeline
             _clipCanvas.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
             _clip.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
             _clip.Children.Clear();
-            foreach(var clip in clips)
+            if(ClipList!=null)
             {
-                _clip.Children.Add(clip.Left);
-                _clip.Children.Add(clip.Middle);
-                _clip.Children.Add(clip.Right);
-                if(IsClipStartTimeCalculated==false)
+                foreach (var clip in ClipList)
                 {
-                    ClipStartTimeChanged(clip.StartingTime);
-                    IsClipStartTimeCalculated = true;
+                    _clip.Children.Add(clip.Left);
+                    _clip.Children.Add(clip.Middle);
+                    _clip.Children.Add(clip.Right);
+                    if (IsClipStartTimeCalculated == false)
+                    {
+                        ClipStartTimeChanged(clip.StartingTime);
+                        IsClipStartTimeCalculated = true;
+                    }
+                    ClipEndTimeChanged(clip);
                 }
-                ClipEndTimeChanged(clip);
             }
         }
-
+        public void DrawTrimmedClip(List<Clip> clips)
+        {
+            TrimmedClipList = clips;
+            _clipTrim.Children.Clear();
+            if (TrimmedClipList != null)
+            {
+                int i = 0;
+                foreach (var clip in TrimmedClipList)
+                {
+                    clip.IsTrimmerLoaded = true;
+                    _clipTrim.Children.Add(clip.Trimmed);
+                    TrimClipStartTimeChanged(clip.StartingTime, i);
+                    TrimClipEndTimeChanged(clip);
+                    i++;
+                }
+            }
+        }
         #endregion
         #region Clip Setting
+        private void TrimClipStartTimeChanged(TimeSpan dt, int itemIndex)
+        {
+            var item = (Border)_clipTrim.Children[itemIndex];
+            TimeSpan ts = dt - StartTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && item != null)
+            {
+                double left = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
+                item.Margin = new Thickness(left, 55, 0, 0);
+            }
+        }
         /// <summary>
         /// Recalculate the left coordinate of the clip bar based on the clip time
         /// </summary>
@@ -913,7 +935,24 @@ namespace AradaTimeline
                 _clip.Margin = new Thickness(left, 0, 0, 0);
             }
         }
-
+        private void TrimClipEndTimeChanged(Clip clip)
+        {
+            TimeSpan ts = clip.EndingTime - clip.StartingTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && clip.Trimmed != null)
+            {
+                double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
+                if (width > 0)
+                {
+                    clip.Trimmed.Width = width - 10;
+                    clip.Length = width - 10;
+                }
+                else
+                {
+                    clip.Trimmed.Width = width;
+                    clip.Length = width;
+                }
+            }
+        }
         /// <summary>
         /// Recalculate the width of the clip bar based on the clip time
         /// </summary>
@@ -986,24 +1025,6 @@ namespace AradaTimeline
         }
         #endregion
         /// <summary>
-        /// Calculate the intermittent time axis
-        /// </summary>
-        /// <param name="region"></param>
-        /// <returns></returns>
-        private Dictionary<KeyValuePair<int, int>, bool> MathToTimeSp(char[] region)
-        {
-            Dictionary<KeyValuePair<int, int>, bool> dic = new Dictionary<KeyValuePair<int, int>, bool>();
-            string regStr = new string(region.Select(x => x == '\0' ? x = '0' : '1').ToArray());
-            foreach (Match item in Regex.Matches(regStr, "(.)\\1*"))
-            {
-                if (item.Success)
-                {
-                    dic.Add(new KeyValuePair<int, int>(dic.Count + 1, item.Value.Length), item.Value.Contains('1') ? true : false);
-                }
-            }
-            return dic;
-        }
-        /// <summary>
         /// Get instance items
         /// </summary>
         public override void OnApplyTemplate()
@@ -1020,6 +1041,8 @@ namespace AradaTimeline
             _axisCanvasMarker = GetTemplateChild(Parid__axisCanvasMarker) as Canvas;
             _clipCanvas = GetTemplateChild(Parid_clipCanvas) as Canvas;
             _clip = GetTemplateChild(Parid_clip) as StackPanel;
+            _clipTrim = GetTemplateChild(Parid_clipTrim) as Canvas;
+            _clipName = GetTemplateChild(Parid_clipName) as TextBlock;
             if ((_zoomSlider = GetTemplateChild(Parid_zoomSlider) as Slider) != null)
             {
                 _zoomSlider.ValueChanged += new RoutedPropertyChangedEventHandler<double>(_zoomSlider_ValueChanged);
@@ -1174,6 +1197,7 @@ namespace AradaTimeline
     public class Clip
     {
         internal double Length { get; set; }
+        internal double TrimLength { get; set; }
         /// <summary>
         /// Clip Starting Time
         /// </summary>
@@ -1185,36 +1209,57 @@ namespace AradaTimeline
         internal Border Left { get; private set; }
         internal Border Right { get; private set; }
         internal Border Middle { get; private set; }
-        public Clip(double lenght=50)
+        internal Border Trimmed { get; private set; } = new Border();
+        internal bool IsTrimmerLoaded { get; set; } = false;
+        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false)
         {
             Length = lenght;
-            Left = new Border()
+            TrimLength = trimLngth;
+            IsTrimmerLoaded = isTrimmerloaded;
+            if(IsTrimmerLoaded)
             {
-                Width = 5,
-                Background = (Brush)(new BrushConverter().ConvertFrom("#FF3AFF00")),
-                BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
-                BorderThickness = new Thickness(0, 0, 1, 0),
-                CornerRadius = new CornerRadius(2, 0, 0, 2),
-                Margin = new Thickness(0, 50, 0, 0)
-            };
-            Right = new Border()
+                Trimmed = new Border()
+                {
+                    Width = trimLngth,
+                    Height = 90,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#123A61")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(0, 0, 1, 0),
+                    CornerRadius = new CornerRadius(2, 0, 0, 2),
+                    Margin = new Thickness(0, 55, 0, 0)
+                };
+            }
+            else
             {
-                Width = 5,
-                Background = (Brush)(new BrushConverter().ConvertFrom("#FF4500")),
-                BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
-                BorderThickness = new Thickness(1, 0, 0, 0),
-                CornerRadius = new CornerRadius(0, 2, 2, 0),
-                Margin = new Thickness(0, 50, 0, 0)
-            };
-            Middle = new Border()
-            {
-                Width = Length,
-                Background = (Brush)(new BrushConverter().ConvertFrom("#FF777777")),
-                BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
-                BorderThickness = new Thickness(0, 0, 1, 0),
-                CornerRadius = new CornerRadius(2, 0, 0, 2),
-                Margin = new Thickness(0, 50, 0, 0)
-            };
+                Left = new Border()
+                {
+                    Width = 5,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF3AFF00")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(0, 0, 1, 0),
+                    CornerRadius = new CornerRadius(2, 0, 0, 2),
+                    Margin = new Thickness(0, 50, 0, 0)
+                };
+                Middle = new Border()
+                {
+                    Width = Length,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF777777")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(0, 0, 1, 0),
+                    CornerRadius = new CornerRadius(2, 0, 0, 2),
+                    Margin = new Thickness(0, 50, 0, 0)
+                };
+                Right = new Border()
+                {
+                    Width = 5,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF4500")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(1, 0, 0, 0),
+                    CornerRadius = new CornerRadius(0, 2, 2, 0),
+                    Margin = new Thickness(0, 50, 0, 0)
+                };
+            }
+            
         }
 
     }

@@ -679,6 +679,15 @@
                                                         </Style>
                                                     </StackPanel.Resources>
                                                 </StackPanel>
+                                                <Canvas
+                                                    x:Name="Z_Parid_clipTrim">
+                                                    <Canvas.Resources>
+                                                        <Style TargetType="{x:Type Border}">
+                                                            <Setter Property="Height" Value="100"/>
+                                                            <Setter Property="Margin" Value="0,50,0,0"/>
+                                                        </Style>
+                                                    </Canvas.Resources>
+                                                </Canvas>
                                                 <TextBlock
                                                     x:Name="Z_Parid_clipName"
                                                     FontSize="11"
