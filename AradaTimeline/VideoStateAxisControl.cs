@@ -53,10 +53,10 @@ namespace AradaTimeline
         public static Canvas _axisCanvasMarker;             //Marker container
         private Slider _zoomSlider;                          //Zoom timeline slider
 
-        private TextBlock _currentTime;                    //Progress pointer time
+        internal TextBlock _currentTime;                    //Progress pointer time
         private Canvas _timePanel;                           //Progress container
         private Canvas _timeLine;                             //Progress pointer container
-        private Grid _timePoint;                                //Progress pointer
+        internal Grid _timePoint;                                //Progress pointer
 
         private Canvas _clipCanvas;                         //Clip control moving container
         private StackPanel _clip;              //Clip slider container
@@ -120,6 +120,8 @@ namespace AradaTimeline
         #endregion
 
         #region Property 
+        private List<Clip> ClipList { get; set; }
+        private bool IsClipStartTimeCalculated { get; set; } = false;
         internal static VideoStateAxisControl VideoControl { get; set; }
         public Visibility SaveBtnVisibility { get; set; } = Visibility.Hidden;
         /// <summary>
@@ -403,6 +405,7 @@ namespace AradaTimeline
         /// <param name="e"></param>
         private void _zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            IsClipStartTimeCalculated = false;
             Slider_Magnification = Math.Round(e.NewValue, 2);
             if(EventArgs==null)
                 InitializeAxis();
@@ -410,6 +413,8 @@ namespace AradaTimeline
             {
                 RefreshTimeline(Drawar, EventArgs);
                 InitializationNewtTimeLine();
+                DrawClip(ClipList);
+                DrawMarker();
             }
         }
 
@@ -855,8 +860,28 @@ namespace AradaTimeline
             }
 
         }
+        internal void DrawMarker()
+        {
+            _axisCanvasMarker.Children.Clear();
+            for(int i=0;i<2;i++)
+            {
+                if(Markers[i]!=null)
+                {
+                    var left = Dial_Cell_H * (Markers[i].Time.Days == 1 ? 23 : Markers[i].Time.Hours) + Dial_Cell_M * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Minutes) + Dial_Cell_S * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Seconds) + Dial_Cell_MiS * (Markers[i].Time.Days == 1 ? 999 : Markers[i].Time.Milliseconds);
+                    var path = new Path()
+                    {
+                        Data = Geometry.Parse(GeometryMarker),
+                        Margin = new Thickness(left, 2, 0, 0),
+                        Name = Markers[i].Name
+                    };
+                    _axisCanvasMarker.Children.Add(path);
+                    _axisCanvasMarker.RegisterName(path.Name, path);
+                }
+            }
+        }
         public void DrawClip(List<Clip> clips)
         {
+            ClipList = clips;
             _clipCanvas.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
             _clip.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
             _clip.Children.Clear();
@@ -865,7 +890,11 @@ namespace AradaTimeline
                 _clip.Children.Add(clip.Left);
                 _clip.Children.Add(clip.Middle);
                 _clip.Children.Add(clip.Right);
-                ClipStartTimeChanged(clip.StartingTime);
+                if(IsClipStartTimeCalculated==false)
+                {
+                    ClipStartTimeChanged(clip.StartingTime);
+                    IsClipStartTimeCalculated = true;
+                }
                 ClipEndTimeChanged(clip);
             }
         }
@@ -891,14 +920,14 @@ namespace AradaTimeline
         /// <param name="dt"></param>
         private void ClipEndTimeChanged(Clip clip)
         {
-            TimeSpan ts = clip.EndingTime - StartTime;
+            TimeSpan ts = clip.EndingTime - clip.StartingTime;
             if (ts.Days <= 1 && ts.Seconds >= 0 && clip.Middle != null)
             {
                 double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
                 if(width>0)
                 {
-                    clip.Middle.Width = width - 10;
-                    clip.Length = width - 10;
+                    clip.Middle.Width = width-10;
+                    clip.Length = width-10;
                 }
                 else
                 {

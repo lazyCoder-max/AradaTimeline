@@ -627,7 +627,7 @@
                                             <RowDefinition />
                                         </Grid.RowDefinitions>
                                         <Canvas x:Name="Z_Parid__axisCanvasTimeText"
-                            Background="#22272a">
+                            Background="#22272a" MouseLeftButtonDown="Z_Parid__axisCanvasTimeText_MouseLeftButtonDown" MouseLeftButtonUp="Z_Parid__axisCanvasTimeText_MouseLeftButtonUp">
                                             <Canvas.Resources>
                                                 <Style TargetType="{x:Type TextBlock}">
                                                     <Setter Property="FontSize" Value="14" />
@@ -659,6 +659,8 @@
                                                     <Style TargetType="{x:Type Line}">
                                                         <Setter Property="Stroke" Value="#c8c7c3" />
                                                         <Setter Property="StrokeThickness" Value="1" />
+                                                        <EventSetter Event="MouseLeftButtonDown" Handler="Line_MouseLeftButtonDown"/>
+                                                        <EventSetter Event="MouseLeftButtonUp" Handler="Line_MouseLeftButtonUp"/>
                                                     </Style>
                                                 </Canvas.Resources>
                                             </Canvas>
@@ -672,7 +674,7 @@
                                                     Orientation="Horizontal">
                                                     <StackPanel.Resources>
                                                         <Style TargetType="{x:Type Border}">
-                                                            <Setter Property="Height" Value="50"/>
+                                                            <Setter Property="Height" Value="100"/>
                                                             <Setter Property="Margin" Value="0,50,0,0"/>
                                                         </Style>
                                                     </StackPanel.Resources>
