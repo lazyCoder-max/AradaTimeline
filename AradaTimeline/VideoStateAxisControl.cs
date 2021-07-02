@@ -58,12 +58,12 @@ namespace AradaTimeline
         internal TextBlock _currentTime;                    //Progress pointer time
         private Canvas _timePanel;                           //Progress container
         private Canvas _timeLine;                             //Progress pointer container
-        internal Grid _timePoint;                                //Progress pointer
+        public Grid _timePoint;                                //Progress pointer
 
         private Canvas _clipCanvas;                         //Clip control moving container
         private StackPanel _clip;              //Clip slider container
         private Canvas _clipTrim;
-        private TextBlock _clipName;
+        private Canvas _clipName;
         private TextBlock _clipStateTimeTextBlock;     //Clip start time indicator
         private TextBlock _clipEndTimeTextBlock;      //Clip end time indicator
 
@@ -125,6 +125,7 @@ namespace AradaTimeline
         #endregion
 
         #region Property 
+        private VideoEventArgs VideoEvent { get; set; }
         private List<Clip> ClipList { get; set; }
         private List<Clip> TrimmedClipList { get; set; }
         private bool IsClipStartTimeCalculated { get; set; } = false;
@@ -255,6 +256,10 @@ namespace AradaTimeline
         #endregion
 
         #region Method 
+        internal void OnTimePointMoved(VideoEventArgs e)
+        {
+            TimePointMoved?.Invoke(this, e);
+        }
         internal void InvokeJoinButton()
         {
             OnJoinButtonClicked();
@@ -265,6 +270,7 @@ namespace AradaTimeline
         }
         public void LoadVideo(VideoEventArgs video)
         {
+            VideoEvent = video;
             VideoControl = this;
             VideoLoaded += VideoStateAxisControl_VideoLoaded;
             VideoLoaded?.Invoke(this, video);
@@ -273,6 +279,7 @@ namespace AradaTimeline
         {
             EventArgs = e;
             RefreshTimeline(AssignDrawer(e.Duration),e);
+            DrawClip(e.Clips);
         }
 
         /// <summary>
@@ -455,6 +462,13 @@ namespace AradaTimeline
                 TimeLine_Resver(delta);
             }
         }
+        public void MoveTimePoint(double position)
+        {
+            double delta = position;
+            double timePointMaxLeft = _timePanel.ActualWidth - _timePoint.ActualWidth;
+            Canvas.SetLeft(_timeLine, delta = delta < 0 ? 0 : (delta > timePointMaxLeft ? timePointMaxLeft : delta));
+            TimeLine_Resver(delta);
+        }
 
         /// <summary>
         /// Refresh time indicator coordinate position
@@ -469,6 +483,7 @@ namespace AradaTimeline
                 new Thickness(delta < 0 ? 10 : delta + 10, 2, 0, 0) :
                 new Thickness(delta > timePointMaxLeft ? timePointMaxLeft - _currentTime.ActualWidth : delta - _currentTime.ActualWidth, 2, 0, 0);
             GetSeekMarkerPoint= _currentTime.Margin.Left;
+            OnTimePointMoved(VideoEvent);
         }
         /// <summary>
         /// Pointer down
@@ -872,7 +887,7 @@ namespace AradaTimeline
                 }
             }
         }
-        public void DrawClip(List<Clip> clips)
+        private void DrawClip(List<Clip> clips)
         {
             ClipList = clips;
             _clipCanvas.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
@@ -898,13 +913,16 @@ namespace AradaTimeline
         {
             TrimmedClipList = clips;
             _clipTrim.Children.Clear();
+            _clipName.Children.Clear();
             if (TrimmedClipList != null)
             {
                 int i = 0;
                 foreach (var clip in TrimmedClipList)
                 {
+                    clip.SetName();
                     clip.IsTrimmerLoaded = true;
                     _clipTrim.Children.Add(clip.Trimmed);
+                    _clipName.Children.Add(clip.ClipText);
                     TrimClipStartTimeChanged(clip.StartingTime, i);
                     TrimClipEndTimeChanged(clip);
                     i++;
@@ -916,11 +934,13 @@ namespace AradaTimeline
         private void TrimClipStartTimeChanged(TimeSpan dt, int itemIndex)
         {
             var item = (Border)_clipTrim.Children[itemIndex];
+            var itemText = (TextBlock)_clipName.Children[itemIndex];
             TimeSpan ts = dt - StartTime;
             if (ts.Days <= 1 && ts.Seconds >= 0 && item != null)
             {
                 double left = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
                 item.Margin = new Thickness(left, 55, 0, 0);
+                itemText.Margin = new Thickness(left, 55, 0, 0);
             }
         }
         /// <summary>
@@ -941,16 +961,8 @@ namespace AradaTimeline
             if (ts.Days <= 1 && ts.Seconds >= 0 && clip.Trimmed != null)
             {
                 double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
-                if (width > 0)
-                {
-                    clip.Trimmed.Width = width - 10;
-                    clip.Length = width - 10;
-                }
-                else
-                {
-                    clip.Trimmed.Width = width;
-                    clip.Length = width;
-                }
+                clip.Trimmed.Width = width;
+                clip.Length = width;
             }
         }
         /// <summary>
@@ -965,8 +977,8 @@ namespace AradaTimeline
                 double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
                 if(width>0)
                 {
-                    clip.Middle.Width = width-10;
-                    clip.Length = width-10;
+                    clip.Middle.Width = width;
+                    clip.Length = width;
                 }
                 else
                 {
@@ -1042,7 +1054,7 @@ namespace AradaTimeline
             _clipCanvas = GetTemplateChild(Parid_clipCanvas) as Canvas;
             _clip = GetTemplateChild(Parid_clip) as StackPanel;
             _clipTrim = GetTemplateChild(Parid_clipTrim) as Canvas;
-            _clipName = GetTemplateChild(Parid_clipName) as TextBlock;
+            _clipName = GetTemplateChild(Parid_clipName) as Canvas;
             if ((_zoomSlider = GetTemplateChild(Parid_zoomSlider) as Slider) != null)
             {
                 _zoomSlider.ValueChanged += new RoutedPropertyChangedEventHandler<double>(_zoomSlider_ValueChanged);
@@ -1107,6 +1119,7 @@ namespace AradaTimeline
         #region Event
         private event EventHandler<VideoEventArgs> VideoLoaded;
         public event EventHandler<MarkerEventArgs> JoinButtonClick;
+        public event EventHandler<VideoEventArgs> TimePointMoved;
         #endregion
     }
 
@@ -1135,6 +1148,11 @@ namespace AradaTimeline
         public TimeSpan Duration { get; set; }
         public int FrameRate { get; set; }
         public string VideoTitle { get; set; }
+        public List<Clip> Clips { get; set; }
+        public VideoEventArgs()
+        {
+            Clips = new List<Clip>();
+        }
     }
     public class MarkerEventArgs: EventArgs
     {
@@ -1147,55 +1165,9 @@ namespace AradaTimeline
         public TimeSpan Time { get; set; }
         public bool IsStarting { get; set; } = false;
     }
-    /// <summary>
-    /// Timeline control event type
-    /// </summary>
-
-    /// <summary>
-    /// Timeline object
-    /// </summary>
-    public class VideoStateItem : INotifyPropertyChanged
-    {
-        private string _cameraName;
-        public string CameraName
-        {
-            get => _cameraName;
-            set { _cameraName = value; OnPropertyChanged("CameraName"); }
-        }
-
-        private bool _cameraChedcked;
-        /// <summary>
-        /// Is the camera selected
-        /// </summary>
-        public bool CameraChecked
-        {
-            get => _cameraChedcked;
-            set { _cameraChedcked = value; OnPropertyChanged("CameraChecked"); }
-        }
-
-        private char[] _axisHistoryTimeList;
-        /// <summary>
-        /// Camera history video video time set
-        /// </summary>
-        public char[] AxisHistoryTimeList
-        {
-            get => _axisHistoryTimeList;
-            set { _axisHistoryTimeList = value; OnPropertyChanged("AxisHistoryTimeList"); }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-    }
     public class Clip
     {
+        public string ClipName { get; set; }
         internal double Length { get; set; }
         internal double TrimLength { get; set; }
         /// <summary>
@@ -1211,11 +1183,13 @@ namespace AradaTimeline
         internal Border Middle { get; private set; }
         internal Border Trimmed { get; private set; } = new Border();
         internal bool IsTrimmerLoaded { get; set; } = false;
-        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false)
+        internal TextBlock ClipText { get; set; }
+        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="")
         {
             Length = lenght;
             TrimLength = trimLngth;
             IsTrimmerLoaded = isTrimmerloaded;
+            ClipName = clipName;
             if(IsTrimmerLoaded)
             {
                 Trimmed = new Border()
@@ -1224,8 +1198,13 @@ namespace AradaTimeline
                     Height = 90,
                     Background = (Brush)(new BrushConverter().ConvertFrom("#123A61")),
                     BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
-                    BorderThickness = new Thickness(0, 0, 1, 0),
+                    BorderThickness = new Thickness(1, 0, 1, 0),
                     CornerRadius = new CornerRadius(2, 0, 0, 2),
+                    Margin = new Thickness(0, 55, 0, 0)
+                };
+                ClipText = new TextBlock()
+                {
+                    Text = ClipName,
                     Margin = new Thickness(0, 55, 0, 0)
                 };
             }
@@ -1234,7 +1213,7 @@ namespace AradaTimeline
                 Left = new Border()
                 {
                     Width = 5,
-                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF3AFF00")),
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#007ACC")),
                     BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
                     BorderThickness = new Thickness(0, 0, 1, 0),
                     CornerRadius = new CornerRadius(2, 0, 0, 2),
@@ -1261,6 +1240,9 @@ namespace AradaTimeline
             }
             
         }
-
+        internal void SetName()
+        {
+            ClipText.Text = ClipName;
+        }
     }
 }

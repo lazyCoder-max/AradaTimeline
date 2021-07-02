@@ -618,7 +618,7 @@
                     Background="#22272a"
                     CanContentScroll="True"
                     HorizontalScrollBarVisibility="Visible"
-                    VerticalScrollBarVisibility="Hidden">
+                    VerticalScrollBarVisibility="Hidden" Focusable="False">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="25" />
@@ -688,12 +688,15 @@
                                                         </Style>
                                                     </Canvas.Resources>
                                                 </Canvas>
-                                                <TextBlock
-                                                    x:Name="Z_Parid_clipName"
-                                                    FontSize="11"
-                                                    Foreground="#D2931A"
-                                                    Text=""
-                                                    Visibility="Collapsed" />
+                                                <Canvas
+                                                    x:Name="Z_Parid_clipName">
+                                                    <Canvas.Resources>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="FontSize" Value="16"/>
+                                                            <Setter Property="Foreground" Value="#D2931A"/>
+                                                        </Style>
+                                                    </Canvas.Resources>
+                                                </Canvas>
                                                 <TextBlock
                                                     x:Name="Z_Parid_currentTime"
                                                     Background="#141414"
@@ -770,7 +773,7 @@
                             Margin="10,3,10,0"
                             Maximum="{Binding ScrollMaximum,ElementName=VideoST}"
                             Value="{Binding ScrollValue,ElementName=VideoST}"
-                            Minimum="1"
+                            Minimum="1" Focusable="False"
                             />
                                         <Viewbox
                             Width="20"
