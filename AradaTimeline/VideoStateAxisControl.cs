@@ -36,37 +36,34 @@ namespace AradaTimeline
     [TemplatePart(Name = Parid_clipStartBorder)]
     [TemplatePart(Name = Parid_clipAreaBorder)]
     [TemplatePart(Name = Parid_clipEndBorder)]
-    [TemplatePart(Name = Parid_clipStackPanel)]
+    [TemplatePart(Name = Parid_clip)]
     [TemplatePart(Name = Parid_clipOff)]
     [TemplatePart(Name = Parid_clipStateTimeTextBlock)]
     [TemplatePart(Name = Parid_clipEndTimeTextBlock)]
     [TemplatePart(Name = Parid_cameraListBox)]
     [TemplatePart(Name = Parid_downButtonListBox)]
+    [TemplatePart(Name = Parid_clipTrim)]
+    [TemplatePart(Name = Parid_clipName)]
 
     #endregion
     public class VideoStateAxisControl : Control
     {
         #region UIElement
-
-        private StackPanel _videoHistoryPanel;           //Historical timeline container
         private ScrollViewer _scrollViewer;                 //Scroll view
         private Canvas _axisCanvas;                          //Time scale container
         private Canvas _axisCanvasTimeText;             //Timescale time text container
         public static Canvas _axisCanvasMarker;             //Marker container
         private Slider _zoomSlider;                          //Zoom timeline slider
 
-        private TextBlock _currentTime;                    //Progress pointer time
+        internal TextBlock _currentTime;                    //Progress pointer time
         private Canvas _timePanel;                           //Progress container
         private Canvas _timeLine;                             //Progress pointer container
-        private Grid _timePoint;                                //Progress pointer
+        public Grid _timePoint;                                //Progress pointer
 
         private Canvas _clipCanvas;                         //Clip control moving container
-        private Border _clipStartBorder;                  //Clip Left Mediation
-        private Border _clipAreaBorder;                  //Clip slider
-        private Border _clipEndBorder;                   //Clip right mediation
-        private StackPanel _clipStackPanel;              //Clip slider container
-        private CheckBox _clipOff;                           //Whether to enable editing control
-
+        private StackPanel _clip;              //Clip slider container
+        private Canvas _clipTrim;
+        private Canvas _clipName;
         private TextBlock _clipStateTimeTextBlock;     //Clip start time indicator
         private TextBlock _clipEndTimeTextBlock;      //Clip end time indicator
 
@@ -88,19 +85,18 @@ namespace AradaTimeline
         private const string Parid_videoHistoryPanel = "Z_videoHistoryPanel";
         private const string Parid_zoomSlider = "Z_Parid_zoomSlider";
         private const string Parid_clipCanvas = "Z_Parid_clipCanvas";
+        private const string Parid_clipTrim = "Z_Parid_clipTrim";
+        private const string Parid_clipName = "Z_Parid_clipName";
         private const string Parid_clipStartBorder = "Z_Parid_clipStartBorder";
         private const string Parid_clipAreaBorder = "Z_Parid_clipAreaBorder";
         private const string Parid_clipEndBorder = "Z_Parid_clipEndBorder";
-        private const string Parid_clipStackPanel = "Z_Parid_clipStackPanel";
+        private const string Parid_clip = "Z_Parid_clip";
         private const string Parid_clipOff = "Z_Parid_clipOff";
         private const string Parid_clipStateTimeTextBlock = "Z_Parid_clipStateTimeTextBlock";
         private const string Parid_clipEndTimeTextBlock = "Z_Parid_clipEndTimeTextBlock";
         private const string Parid_cameraListBox = "Z_Parid_cameraListBox";
         private const string Parid_downButtonListBox = "Z_Parid_downButtonListBox";
         private const string GeometryMarker = "M17,4c0,2.69,0.001,7.441,0.001,10.086C14.13,14.387,12.74,15.951,12,17.611c-0.74-1.66-2.13-3.224-5.001-3.525 C6.999,11.442,6.999,6.69,7,4H17 M18,2H6C5.448,2,5,2.445,5,2.997c0,2.591-0.001,9.51-0.001,12.05c0,0.515,0.394,0.987,0.908,0.987 c0.002,0,0.003,0,0.005,0c0.017,0,0.035,0,0.052,0c6.024,0,4.041,5.971,6.036,7.966c1.994-1.994,0.01-7.966,6.036-7.966 c0.017,0,0.035,0,0.052,0c0.002,0,0.003,0,0.005,0c0.514,0,0.908-0.472,0.908-0.987c0.001-2.54,0-9.459-0.001-12.05 C19,2.445,18.552,2,18,2L18,2z";
-        private const string GeometryDown = "M954.123536 509.086647 526.172791 932.999426c-8.074909 8.074909-20.185738 8.074909-28.260647 0L69.960375 509.086647c-12.110829-14.130835-4.427846-34.317597 14.130835-34.317597l215.994356 0L300.085566 107.149369c0-12.111852 10.093892-22.205745 22.204721-22.205745l379.50436 0c12.110829 0 22.204721 10.093892 22.204721 24.223704l0 365.601722 215.994356 0C958.159456 474.770074 966.234365 496.975818 954.123536 509.086647z";
-        private const string GeometryFavorite = "M1024 378.88l-314.647273-37.236364L512 0 314.647273 341.643636 0 378.88l236.450909 266.24L191.767273 1024 512 872.261818 832.232727 1024l-44.683636-378.88L1024 378.88z";
-        private const string GeometryOpen = "M512 68.191078c-245.204631 0-443.808922 198.60429-443.808922 443.808922s198.60429 443.808922 443.808922 443.808922 443.808922-198.60429 443.808922-443.808922S757.203608 68.191078 512 68.191078zM423.23842 711.713554 423.23842 312.285422l266.284739 199.713554L423.23842 711.713554z";
 
         #endregion
 
@@ -109,14 +105,6 @@ namespace AradaTimeline
         // Using a DependencyProperty as the backing store for ScrollValue.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ScrollValueProperty =
             DependencyProperty.Register("ScrollValue", typeof(double), typeof(VideoStateAxisControl), new PropertyMetadata(12.0));
-
-
-        public static readonly DependencyProperty HistoryVideoSourceProperty = DependencyProperty.Register(
-            "HisVideoSources",
-            typeof(ObservableCollection<VideoStateItem>),
-            typeof(VideoStateAxisControl),
-            new PropertyMetadata(new ObservableCollection<VideoStateItem>(), OnHistoryVideoSourcesChanged));
-
         public static readonly DependencyProperty StartTimeProperty = DependencyProperty.Register(
             "StartTime",
             typeof(TimeSpan),
@@ -134,28 +122,13 @@ namespace AradaTimeline
             typeof(TimeSpan),
             typeof(VideoStateAxisControl),
             new PropertyMetadata(OnAxisTimeChanged));
-
-        public static readonly DependencyProperty ClipStartTimeProperty = DependencyProperty.Register(
-            "ClipStartTime",
-            typeof(TimeSpan),
-            typeof(VideoStateAxisControl),
-            new PropertyMetadata(OnClipTimeChanged));
-
-        public static readonly DependencyProperty ClipEndTimeProperty = DependencyProperty.Register(
-            "ClipEndTime",
-            typeof(TimeSpan),
-            typeof(VideoStateAxisControl),
-            new PropertyMetadata(OnClipTimeChanged));
-
-        public static readonly DependencyProperty ClipOffProperty = DependencyProperty.Register(
-            "ClipOff",
-            typeof(bool),
-            typeof(VideoStateAxisControl),
-            new PropertyMetadata(OnClipOffChanged));
-
         #endregion
 
         #region Property 
+        private VideoEventArgs VideoEvent { get; set; }
+        private List<Clip> ClipList { get; set; }
+        private List<Clip> TrimmedClipList { get; set; }
+        private bool IsClipStartTimeCalculated { get; set; } = false;
         internal static VideoStateAxisControl VideoControl { get; set; }
         public Visibility SaveBtnVisibility { get; set; } = Visibility.Hidden;
         /// <summary>
@@ -193,34 +166,6 @@ namespace AradaTimeline
             get { return (TimeSpan)GetValue(EndTimeProperty); }
             set { SetValue(EndTimeProperty, value); }
         }
-
-        /// <summary>
-        /// Clip opening control
-        /// </summary>
-        public bool ClipOff
-        {
-            get { return (bool)GetValue(ClipOffProperty); }
-            set { SetValue(ClipOffProperty, value); }
-        }
-
-        /// <summary>
-        /// Clip end time
-        /// </summary>
-        public TimeSpan ClipEndTime
-        {
-            get { return (TimeSpan)GetValue(ClipEndTimeProperty); }
-            set { SetValue(ClipEndTimeProperty, value); }
-        }
-
-        /// <summary>
-        /// Clip start time
-        /// </summary>
-        public TimeSpan ClipStartTime
-        {
-            get { return (TimeSpan)GetValue(ClipStartTimeProperty); }
-            set { SetValue(ClipStartTimeProperty, value); }
-        }
-
         /// <summary>
         /// Pointer time
         /// </summary>
@@ -229,16 +174,6 @@ namespace AradaTimeline
             get { return (TimeSpan)GetValue(AxisTimeProperty); }
             set { SetValue(AxisTimeProperty, value); }
         }
-
-        /// <summary>
-        /// Historical video source list
-        /// </summary>
-        public ObservableCollection<VideoStateItem> HisVideoSources
-        {
-            get { return (ObservableCollection<VideoStateItem>)GetValue(HistoryVideoSourceProperty); }
-            set { SetValue(HistoryVideoSourceProperty, value); }
-        }
-
         /// <summary>
         /// Width of the time axis occupied per hour
         /// </summary>
@@ -273,21 +208,6 @@ namespace AradaTimeline
         {
             get { return Dial_Cell_S / 1000; }
         }
-
-        /// <summary>
-        /// Clip start mouse button position
-        /// </summary>
-        private double ClipStart_MouseDown_Offset = 0;
-
-        /// <summary>
-        /// Clip the left coordinate when the mouse is pressed
-        /// </summary>
-        private double Start_MouseDown_ClipOffset = 0;
-
-        /// <summary>
-        /// The width of the clip slider when the mouse is pressed
-        /// </summary>
-        private double ClipStart_MouseDown_AreaWidth = 0;
 
         /// <summary>
         /// Time axis zoom ratio
@@ -336,6 +256,10 @@ namespace AradaTimeline
         #endregion
 
         #region Method 
+        internal void OnTimePointMoved(VideoEventArgs e)
+        {
+            TimePointMoved?.Invoke(this, e);
+        }
         internal void InvokeJoinButton()
         {
             OnJoinButtonClicked();
@@ -346,6 +270,7 @@ namespace AradaTimeline
         }
         public void LoadVideo(VideoEventArgs video)
         {
+            VideoEvent = video;
             VideoControl = this;
             VideoLoaded += VideoStateAxisControl_VideoLoaded;
             VideoLoaded?.Invoke(this, video);
@@ -354,6 +279,7 @@ namespace AradaTimeline
         {
             EventArgs = e;
             RefreshTimeline(AssignDrawer(e.Duration),e);
+            DrawClip(e.Clips);
         }
 
         /// <summary>
@@ -439,24 +365,6 @@ namespace AradaTimeline
                 AxisOb.InitializeAxis();
             }
         }
-
-        /// <summary>
-        /// Historical video source-change
-        /// </summary>
-        /// <param name="d"></param>
-        /// <param name="e"></param>
-        private static void OnHistoryVideoSourcesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            VideoStateAxisControl AxisOb = d as VideoStateAxisControl;
-            if (AxisOb.HisVideoSources != null && AxisOb.HisVideoSources.Count() > 0)
-            {
-                AxisOb.InitializeAxis();
-            }
-            AxisOb.HisVideoSources.CollectionChanged += (s, o) =>
-            {
-                AxisOb.AddHisPie();
-            };
-        }
         /// <summary>
         /// Pointer time refresh pointer position
         /// </summary>
@@ -472,42 +380,6 @@ namespace AradaTimeline
         }
 
         /// <summary>
-        /// Editing time changes, refreshing the editing control bar
-        /// </summary>
-        /// <param name="d"></param>
-        /// <param name="e"></param>
-        private static void OnClipTimeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            VideoStateAxisControl AxisOb = d as VideoStateAxisControl;
-            if (AxisOb != null && e.NewValue != e.OldValue)
-            {
-                if (e.Property.Name == nameof(AxisOb.ClipStartTime))
-                {
-                    AxisOb.ClipStartTimeChanged((TimeSpan)e.NewValue);
-                }
-                if (e.Property.Name == nameof(AxisOb.ClipEndTime))
-                {
-                    AxisOb.ClipEndTimeChanged((TimeSpan)e.NewValue);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Clip open control source change event
-        /// </summary>
-        /// <param name="d"></param>
-        /// <param name="e"></param>
-        private static void OnClipOffChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            VideoStateAxisControl AxisOb = d as VideoStateAxisControl;
-            if (AxisOb != null && e.NewValue != e.OldValue)
-            {
-                AxisOb.ClipOff = (bool)e.NewValue;
-                AxisOb._clipOff.IsChecked = ((bool)e.NewValue) ? true : false;
-            }
-        }
-
-        /// <summary>
         /// The constructor initializes some properties and styles
         /// </summary>
         public VideoStateAxisControl()
@@ -518,6 +390,7 @@ namespace AradaTimeline
                 SizeChanged += delegate
                 {
                     InitializeAxis();
+
                 };
             };
         }
@@ -539,110 +412,6 @@ namespace AradaTimeline
                 _currentTime.Text = dt.ToString();
             }
         }
-
-        /// <summary>
-        /// Clip the mouse up
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Clip_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            Border bor = sender as Border;
-            if (bor != null)
-            {
-                bor.ReleaseMouseCapture();
-            }
-        }
-
-        /// <summary>
-        /// Clip mouse click
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Clip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            Border bor = sender as Border;
-            if (bor != null)
-            {
-                bor.CaptureMouse();
-                ClipStart_MouseDown_Offset = e.GetPosition(_clipCanvas).X;
-                Start_MouseDown_ClipOffset = _clipStackPanel.Margin.Left;
-                ClipStart_MouseDown_AreaWidth = _clipStackPanel.Margin.Left + _clipStackPanel.ActualWidth;
-            }
-        }
-
-        /// <summary>
-        /// Clip mouse movement, release mouse capture
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Clip_MouseMove(object sender, MouseEventArgs e)
-        {
-            Border bor = sender as Border;
-            if (bor != null && e.LeftButton == MouseButtonState.Pressed)
-            {
-                switch (bor.Name)
-                {
-                    case Parid_clipStartBorder:
-                        ClipStart(e.GetPosition(_clipCanvas));
-                        break;
-
-                    case Parid_clipEndBorder:
-                        ClipEnd(e.GetPosition(_clipCanvas));
-                        break;
-
-                    case Parid_clipAreaBorder:
-                        MoveClipArea(e.GetPosition(_clipCanvas));
-                        break;
-                }
-                MathClipTime();
-            }
-        }
-
-        /// <summary>
-        /// Clip start slider increment
-        /// </summary>
-        /// <param name="pt"></param>
-        private void ClipStart(Point pt)
-        {
-            if (pt.X >= 0)
-            {
-                double clipWidth = ClipStart_MouseDown_AreaWidth - (Start_MouseDown_ClipOffset + (pt.X - ClipStart_MouseDown_Offset) < 0 ? 0 :
-                Start_MouseDown_ClipOffset + (pt.X - ClipStart_MouseDown_Offset) > _clipCanvas.ActualWidth - _clipAreaBorder.Width ?
-                _axisCanvas.ActualWidth - _clipAreaBorder.Width :
-                Start_MouseDown_ClipOffset + (pt.X - ClipStart_MouseDown_Offset)) - 10;
-                _clipAreaBorder.Width = clipWidth <= 0 ? 0 : clipWidth;
-                if (clipWidth >= 0)
-                {
-                    MoveClipArea(pt);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Clip end slider increment
-        /// </summary>
-        private void ClipEnd(Point pt)
-        {
-            double clipWidth = pt.X - _clipStackPanel.Margin.Left;
-            _clipAreaBorder.Width = clipWidth <= 0 ? 0 :
-                clipWidth > _axisCanvas.ActualWidth - _clipStackPanel.Margin.Left ?
-                _axisCanvas.ActualWidth - _clipStackPanel.Margin.Left : clipWidth;
-        }
-
-        /// <summary>
-        /// Clip scroll slider
-        /// </summary>
-        /// <param name="pt"></param>
-        private void MoveClipArea(Point pt)
-        {
-            double clipLeft = Start_MouseDown_ClipOffset + (pt.X - ClipStart_MouseDown_Offset) < 0 ? 0 :
-                Start_MouseDown_ClipOffset + (pt.X - ClipStart_MouseDown_Offset) > _clipCanvas.ActualWidth - _clipAreaBorder.Width ?
-                _axisCanvas.ActualWidth - _clipAreaBorder.Width :
-                Start_MouseDown_ClipOffset + (pt.X - ClipStart_MouseDown_Offset);
-            _clipStackPanel.Margin = new Thickness(clipLeft, 0, 0, 0);
-        }
-
         /// <summary>
         /// Time zoom slider event
         /// </summary>
@@ -650,17 +419,17 @@ namespace AradaTimeline
         /// <param name="e"></param>
         private void _zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            IsClipStartTimeCalculated = false;
             Slider_Magnification = Math.Round(e.NewValue, 2);
             if(EventArgs==null)
                 InitializeAxis();
             else
             {
                 RefreshTimeline(Drawar, EventArgs);
-                AddHisPie();
-                ClipStartTimeChanged(ClipStartTime);
-                ClipEndTimeChanged(ClipEndTime);
-                InitiaClipTime();
                 InitializationNewtTimeLine();
+                DrawClip(ClipList);
+                DrawTrimmedClip(TrimmedClipList);
+                DrawMarker();
             }
         }
 
@@ -693,6 +462,13 @@ namespace AradaTimeline
                 TimeLine_Resver(delta);
             }
         }
+        public void MoveTimePoint(double position)
+        {
+            double delta = position;
+            double timePointMaxLeft = _timePanel.ActualWidth - _timePoint.ActualWidth;
+            Canvas.SetLeft(_timeLine, delta = delta < 0 ? 0 : (delta > timePointMaxLeft ? timePointMaxLeft : delta));
+            TimeLine_Resver(delta);
+        }
 
         /// <summary>
         /// Refresh time indicator coordinate position
@@ -707,22 +483,8 @@ namespace AradaTimeline
                 new Thickness(delta < 0 ? 10 : delta + 10, 2, 0, 0) :
                 new Thickness(delta > timePointMaxLeft ? timePointMaxLeft - _currentTime.ActualWidth : delta - _currentTime.ActualWidth, 2, 0, 0);
             GetSeekMarkerPoint= _currentTime.Margin.Left;
+            OnTimePointMoved(VideoEvent);
         }
-
-        /// <summary>
-        /// Clip control turns on the Checked event
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Clip_UnChecked_Checked(object sender, RoutedEventArgs e)
-        {
-            CheckBox check = sender as CheckBox;
-            if (check != null)
-            {
-                ClipOff = check.IsChecked == null || check.IsChecked == false ? false : true;
-            }
-        }
-
         /// <summary>
         /// Pointer down
         /// </summary>
@@ -781,59 +543,13 @@ namespace AradaTimeline
         /// </summary>
         private void InitializeAxis()
         {
-            AddTimeTextBlock();
-            AddTimeLine();
-            AddHisPie();
-            //ClipStartTimeChanged(ClipStartTime);
-            //ClipEndTimeChanged(ClipEndTime);
-            InitiaClipTime();
+            IsClipStartTimeCalculated = false;
+            RefreshTimeline(Drawar, EventArgs);
             InitializationNewtTimeLine();
+            DrawClip(ClipList);
+            DrawTrimmedClip(TrimmedClipList);
+            DrawMarker();
         }
-
-        /// <summary>
-        /// Initialize the clip time
-        /// </summary>
-        private void InitiaClipTime()
-        {
-            ClipStartTime = ClipStartTime == TimeSpan.Parse("0:00:00.00000") ? StartTime : ClipStartTime;
-            ClipEndTime = ClipEndTime == TimeSpan.Parse("0:00:00.00000") ? StartTime.Add(new TimeSpan(1,0,0)) : ClipEndTime;
-        }
-        /// <summary>
-        /// Calculate the clip time
-        /// </summary>
-        private void MathClipTime()
-        {
-            ClipStartTime = XToTimeSpan(_clipStackPanel.Margin.Left);
-            ClipEndTime = XToTimeSpan(_clipStackPanel.Margin.Left + _clipAreaBorder.ActualWidth);
-        }
-
-        /// <summary>
-        /// Recalculate the left coordinate of the clip bar based on the clip time
-        /// </summary>
-        private void ClipStartTimeChanged(TimeSpan dt)
-        {
-            TimeSpan ts = dt - StartTime;
-            if (ts.Days <= 1 && ts.Seconds >= 0 && _clipStackPanel != null)
-            {
-                double left = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
-                _clipStackPanel.Margin = new Thickness(left, 0, 0, 0);
-            }
-        }
-
-        /// <summary>
-        /// Recalculate the width of the clip bar based on the clip time
-        /// </summary>
-        /// <param name="dt"></param>
-        private void ClipEndTimeChanged(TimeSpan dt)
-        {
-            TimeSpan ts = dt - ClipStartTime;
-            if (ts.Days <= 1 && ts.Seconds >= 0 && _clipAreaBorder != null)
-            {
-                double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
-                _clipAreaBorder.Width = width;
-            }
-        }
-
         /// <summary>
         /// Initialize pointer position
         /// </summary>
@@ -844,28 +560,7 @@ namespace AradaTimeline
                 RefreshTimeLineLeft(AxisTime);
             }
         }
-
-        /// <summary>
-        /// Initialize timescale text
-        /// </summary>
-        /// <param name="HaveMathTextBlock">The amount of time text that needs to be filled</param>
-        private void AddTimeTextBlock()
-        {
-            if (_axisCanvasTimeText != null)
-            {
-                _axisCanvasTimeText.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
-                _axisCanvasTimeText.Children.Clear();
-                for (int i = 0; i < 24; i++)
-                {
-                    _axisCanvasTimeText.Children.Add((
-                        new TextBlock()
-                        {
-                            Text = i.ToString().PadLeft(2, '0') + ":00:00:00",
-                            Margin = new Thickness(Dial_Cell_H * i-30, 2, 0, 0)
-                        }));
-                }
-            }
-        }
+        #region Drawers
         /// <summary>
         /// Initialize timescale text
         /// </summary>
@@ -886,18 +581,18 @@ namespace AradaTimeline
                             Text = i.ToString().PadLeft(2, '0') + ":00:00:00",
                             Margin = new Thickness(Dial_Cell_H * i - 30, 2, 0, 0)
                         }));
-                    for(int j=i;j<minute;j++)
+                    for (int j = i; j < minute; j++)
                     {
-                        if(j==minuteHalf)
+                        if (j == minuteHalf)
                         {
                             _axisCanvasTimeText.Children.Add((
                                 new TextBlock()
                                 {
                                     Text = $"{j.ToString("00")}",
-                                    FontSize= 8,
+                                    FontSize = 8,
                                     Margin = new Thickness(Dial_Cell_M * j - 10, 2, 0, 0)
                                 }));
-                            minuteHalf +=60;
+                            minuteHalf += 60;
                         }
                     }
                 }
@@ -986,37 +681,11 @@ namespace AradaTimeline
                 }
             }
         }
-
-        /// <summary>
-        /// Initialize the time scale
-        /// </summary>
-        /// <param name="HaveMathTextBlock">The number of time scales that need to be filled</param>
-        private void AddTimeLine()
-        {
-            if (_axisCanvas != null)
-            {
-                _axisCanvas.Children.Clear();
-                for (int i = 0; i < 24; i++)
-                {
-                    _axisCanvas.Children.Add(new Line()
-                    {
-                        X1 = Dial_Cell_H * i,
-                        Y1 = 0,
-                        X2 = Dial_Cell_H * i,
-                        Y2 = 25,
-                        StrokeThickness = 1
-                    });
-                    var result = Dial_Cell_H * i;
-                    //DrawMinuiteLines(result);
-                }
-
-            }
-        }
         /// <summary>
         /// Draws Hour Lines
         /// </summary>
         /// <param name="IsSmall"></param>
-        private void DrawHourLines(int totalDrawing,bool IsSmall=false)
+        private void DrawHourLines(int totalDrawing, bool IsSmall = false)
         {
             var y2 = 15;
             if (IsSmall)
@@ -1039,7 +708,7 @@ namespace AradaTimeline
                 });
                 for (int j = i; j < minute; j++)
                 {
-                    if(j==minuteHalf)
+                    if (j == minuteHalf)
                     {
                         _axisCanvas.Children.Add(new Line()
                         {
@@ -1058,7 +727,7 @@ namespace AradaTimeline
         /// Draws Second Lines
         /// </summary>
         /// <param name="IsSmall"></param>
-        private void DrawSecondLines(int totalDrawing,bool IsSmall = false)
+        private void DrawSecondLines(int totalDrawing, bool IsSmall = false)
         {
             var y2 = 15;
             if (IsSmall)
@@ -1068,7 +737,7 @@ namespace AradaTimeline
             _axisCanvas.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
             _axisCanvas.Children.Clear();
             int mSecondHalf = 500;
-            int mSecond = totalDrawing*1000;
+            int mSecond = totalDrawing * 1000;
             for (int i = 0; i <= totalDrawing; i++)
             {
                 _axisCanvas.Children.Add(new Line()
@@ -1102,7 +771,7 @@ namespace AradaTimeline
         /// </summary>
         /// <param name="hourPoint"></param>
         /// <param name="IsSmall"></param>
-        private void DrawMinuiteLines(int totalDrawing,bool IsSmall=false)
+        private void DrawMinuiteLines(int totalDrawing, bool IsSmall = false)
         {
             var y2 = 15;
             if (IsSmall)
@@ -1144,7 +813,7 @@ namespace AradaTimeline
         /// Draws Millisecond Lines
         /// </summary>
         /// <param name="IsSmall"></param>
-        private void DrawMillisecodLines(int totalDrawing,bool IsSmall = false)
+        private void DrawMillisecodLines(int totalDrawing, bool IsSmall = false)
         {
             var y2 = 15;
             if (IsSmall)
@@ -1169,6 +838,156 @@ namespace AradaTimeline
         /// Draw a Marker on a given point
         /// </summary>
         /// <param name="left"></param>
+        public void DrawMarker(double left, bool IsStartingPoint = false)
+        {
+            if (Markers == null)
+                Markers = new Marker[2];
+            if (IsMarkerListFull == false && IsMarkerExist(left) == false)
+            {
+                var path = new Path()
+                {
+                    Data = Geometry.Parse(GeometryMarker),
+                    Margin = new Thickness(left - 12, 2, 0, 0),
+                    Name = $"Marker{GetEmptyMarkerIndex}"
+                };
+                _axisCanvasMarker.Children.Add(path);
+                _axisCanvasMarker.RegisterName(path.Name, path);
+                Marker marker = new Marker()
+                {
+                    Name = $"Marker{GetEmptyMarkerIndex}",
+                    MarkerPoint = left,
+                    IsStarting = IsStartingPoint,
+                    Time = AxisTime
+                };
+                Markers[GetEmptyMarkerIndex] = marker;
+                if (GetEmptyMarkerIndex == 0)
+                    Generic.SaveBtn.Visibility = Visibility.Visible;
+            }
+
+        }
+        internal void DrawMarker()
+        {
+            _axisCanvasMarker.Children.Clear();
+            if(Markers!=null)
+            {
+                for (int i = 0; i < Markers.Count(); i++)
+                {
+                    if (Markers[i] != null)
+                    {
+                        var left = Dial_Cell_H * (Markers[i].Time.Days == 1 ? 23 : Markers[i].Time.Hours) + Dial_Cell_M * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Minutes) + Dial_Cell_S * (Markers[i].Time.Days == 1 ? 59 : Markers[i].Time.Seconds) + Dial_Cell_MiS * (Markers[i].Time.Days == 1 ? 999 : Markers[i].Time.Milliseconds);
+                        var path = new Path()
+                        {
+                            Data = Geometry.Parse(GeometryMarker),
+                            Margin = new Thickness(left, 2, 0, 0),
+                            Name = Markers[i].Name
+                        };
+                        _axisCanvasMarker.Children.Add(path);
+                        _axisCanvasMarker.RegisterName(path.Name, path);
+                    }
+                }
+            }
+        }
+        private void DrawClip(List<Clip> clips)
+        {
+            ClipList = clips;
+            _clipCanvas.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
+            _clip.Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification;
+            _clip.Children.Clear();
+            if(ClipList!=null)
+            {
+                foreach (var clip in ClipList)
+                {
+                    _clip.Children.Add(clip.Left);
+                    _clip.Children.Add(clip.Middle);
+                    _clip.Children.Add(clip.Right);
+                    if (IsClipStartTimeCalculated == false)
+                    {
+                        ClipStartTimeChanged(clip.StartingTime);
+                        IsClipStartTimeCalculated = true;
+                    }
+                    ClipEndTimeChanged(clip);
+                }
+            }
+        }
+        public void DrawTrimmedClip(List<Clip> clips)
+        {
+            TrimmedClipList = clips;
+            _clipTrim.Children.Clear();
+            _clipName.Children.Clear();
+            if (TrimmedClipList != null)
+            {
+                int i = 0;
+                foreach (var clip in TrimmedClipList)
+                {
+                    clip.SetName();
+                    clip.IsTrimmerLoaded = true;
+                    _clipTrim.Children.Add(clip.Trimmed);
+                    _clipName.Children.Add(clip.ClipText);
+                    TrimClipStartTimeChanged(clip.StartingTime, i);
+                    TrimClipEndTimeChanged(clip);
+                    i++;
+                }
+            }
+        }
+        #endregion
+        #region Clip Setting
+        private void TrimClipStartTimeChanged(TimeSpan dt, int itemIndex)
+        {
+            var item = (Border)_clipTrim.Children[itemIndex];
+            var itemText = (TextBlock)_clipName.Children[itemIndex];
+            TimeSpan ts = dt - StartTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && item != null)
+            {
+                double left = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
+                item.Margin = new Thickness(left, 55, 0, 0);
+                itemText.Margin = new Thickness(left, 55, 0, 0);
+            }
+        }
+        /// <summary>
+        /// Recalculate the left coordinate of the clip bar based on the clip time
+        /// </summary>
+        private void ClipStartTimeChanged(TimeSpan dt)
+        {
+            TimeSpan ts = dt - StartTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && _clip != null)
+            {
+                double left = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
+                _clip.Margin = new Thickness(left, 0, 0, 0);
+            }
+        }
+        private void TrimClipEndTimeChanged(Clip clip)
+        {
+            TimeSpan ts = clip.EndingTime - clip.StartingTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && clip.Trimmed != null)
+            {
+                double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
+                clip.Trimmed.Width = width;
+                clip.Length = width;
+            }
+        }
+        /// <summary>
+        /// Recalculate the width of the clip bar based on the clip time
+        /// </summary>
+        /// <param name="dt"></param>
+        private void ClipEndTimeChanged(Clip clip)
+        {
+            TimeSpan ts = clip.EndingTime - clip.StartingTime;
+            if (ts.Days <= 1 && ts.Seconds >= 0 && clip.Middle != null)
+            {
+                double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
+                if(width>0)
+                {
+                    clip.Middle.Width = width;
+                    clip.Length = width;
+                }
+                else
+                {
+                    clip.Middle.Width = width;
+                    clip.Length = width;
+                }
+            }
+        }
+        #endregion
         #region Marker
         private bool IsMarkerListFull
         {
@@ -1216,118 +1035,7 @@ namespace AradaTimeline
                 return -1;
             }
         }
-        public void DrawMarker(double left, bool IsStartingPoint=false)
-        {
-            if(Markers==null)
-                Markers = new Marker[2];
-            if (IsMarkerListFull==false && IsMarkerExist(left)==false)
-            {
-                var path = new Path()
-                {
-                    Data = Geometry.Parse(GeometryMarker),
-                    Margin = new Thickness(left - 12, 2, 0, 0),
-                    Name = $"Marker{GetEmptyMarkerIndex}"
-                };
-                _axisCanvasMarker.Children.Add(path);
-                _axisCanvasMarker.RegisterName(path.Name, path);
-                Marker marker = new Marker()
-                {
-                    Name = $"Marker{GetEmptyMarkerIndex}",
-                    MarkerPoint = left,
-                    IsStarting = IsStartingPoint,
-                    Time = AxisTime
-                };
-                Markers[GetEmptyMarkerIndex] = marker;
-                if (GetEmptyMarkerIndex == 0)
-                    Generic.SaveBtn.Visibility = Visibility.Visible;
-            }
-            
-        }
         #endregion
-        /// <summary>
-        /// Initialize the timeline
-        /// </summary>
-        private void AddHisPie()
-        {
-            if (_videoHistoryPanel != null && HisVideoSources != null && HisVideoSources.Count() > 0)
-            {
-                _videoHistoryPanel.Children.Clear();
-                foreach (var item in HisVideoSources)
-                {
-                    Dictionary<KeyValuePair<int, int>, bool> dic = MathToTimeSp(item.AxisHistoryTimeList);
-                    DisplayData(dic);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Calculate and fill timeline query results
-        /// </summary>
-        private void DisplayData(Dictionary<KeyValuePair<int, int>, bool> dic)
-        {
-            TimeSpan serTime = StartTime;
-            Canvas TimeCanvas = new Canvas() { Width = (_scrollViewer.ActualWidth - 10) * Slider_Magnification };
-            foreach (var item in dic)
-            {
-                TimeCanvas.Children.Add(new Rectangle()
-                {
-                    Width = item.Key.Value * Dial_Cell_M,
-                    Height = item.Value ? 16 : 0,
-                    Margin = new Thickness(serTime.Hours * Dial_Cell_H + serTime.Minutes * Dial_Cell_M + serTime.Seconds * Dial_Cell_S + serTime.Milliseconds * Dial_Cell_MiS, 0, 0, 0)
-                });
-                serTime = serTime.Add(new TimeSpan(0, item.Key.Value,0));
-            }
-            _videoHistoryPanel.Children.Add(TimeCanvas);
-        }
-
-        /// <summary>
-        /// Calculate the intermittent time axis
-        /// </summary>
-        /// <param name="region"></param>
-        /// <returns></returns>
-        private Dictionary<KeyValuePair<int, int>, bool> MathToTimeSp(char[] region)
-        {
-            Dictionary<KeyValuePair<int, int>, bool> dic = new Dictionary<KeyValuePair<int, int>, bool>();
-            string regStr = new string(region.Select(x => x == '\0' ? x = '0' : '1').ToArray());
-            foreach (Match item in Regex.Matches(regStr, "(.)\\1*"))
-            {
-                if (item.Success)
-                {
-                    dic.Add(new KeyValuePair<int, int>(dic.Count + 1, item.Value.Length), item.Value.Contains('1') ? true : false);
-                }
-            }
-            return dic;
-        }
-
-        /// <summary>
-        /// Create the top-level data template container
-        /// </summary>
-        /// <returns></returns>
-        private FrameworkElementFactory CreateTopElement()
-        {
-            FrameworkElementFactory frameworkElementFactory = new FrameworkElementFactory(typeof(StackPanel));
-            frameworkElementFactory.SetValue(StackPanel.HeightProperty, 16.00);
-            frameworkElementFactory.SetValue(StackPanel.MarginProperty, new Thickness(0, 4, 5, 0));
-            frameworkElementFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-            return frameworkElementFactory;
-        }
-
-        /// <summary>
-        /// Create a Path element template
-        /// </summary>
-        /// <param name="GeometryPath"></param>
-        /// <param name="ToolTipStr"></param>
-        /// <returns></returns>
-        private FrameworkElementFactory CreatePathElement(string GeometryPath, string ToolTipStr)
-        {
-            FrameworkElementFactory path = new FrameworkElementFactory(typeof(Path));
-            path.SetValue(CursorProperty, Cursors.Hand);
-            path.SetValue(Path.DataProperty, Geometry.Parse(GeometryPath));
-            path.SetValue(Path.FillProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#c8c7c3")));
-            path.SetValue(ToolTipProperty, ToolTipStr);
-            return path;
-        }
-
         /// <summary>
         /// Get instance items
         /// </summary>
@@ -1341,16 +1049,12 @@ namespace AradaTimeline
             _timePanel = GetTemplateChild(Parid_timePanel) as Canvas;
             _timeLine = GetTemplateChild(Parid_timeLine) as Canvas;
             _axisCanvas = GetTemplateChild(Parid_axisCanvas) as Canvas;
-            _videoHistoryPanel = GetTemplateChild(Parid_videoHistoryPanel) as StackPanel;
             _axisCanvasTimeText = GetTemplateChild(Parid__axisCanvasTimeText) as Canvas;
             _axisCanvasMarker = GetTemplateChild(Parid__axisCanvasMarker) as Canvas;
             _clipCanvas = GetTemplateChild(Parid_clipCanvas) as Canvas;
-            _clipStackPanel = GetTemplateChild(Parid_clipStackPanel) as StackPanel;
-            if ((_clipOff = GetTemplateChild(Parid_clipOff) as CheckBox) != null)
-            {
-                _clipOff.Checked += new RoutedEventHandler(Clip_UnChecked_Checked);
-                _clipOff.Unchecked += new RoutedEventHandler(Clip_UnChecked_Checked);
-            }
+            _clip = GetTemplateChild(Parid_clip) as StackPanel;
+            _clipTrim = GetTemplateChild(Parid_clipTrim) as Canvas;
+            _clipName = GetTemplateChild(Parid_clipName) as Canvas;
             if ((_zoomSlider = GetTemplateChild(Parid_zoomSlider) as Slider) != null)
             {
                 _zoomSlider.ValueChanged += new RoutedPropertyChangedEventHandler<double>(_zoomSlider_ValueChanged);
@@ -1368,24 +1072,6 @@ namespace AradaTimeline
             if ((_currentTime = GetTemplateChild(Parid_currentTime) as TextBlock) != null)
             {
                 _currentTime.Text = StartTime.ToString();
-            }
-            if ((_clipEndBorder = GetTemplateChild(Parid_clipEndBorder) as Border) != null)
-            {
-                _clipEndBorder.MouseLeftButtonDown += new MouseButtonEventHandler(Clip_MouseLeftButtonDown);
-                _clipEndBorder.MouseMove += new MouseEventHandler(Clip_MouseMove);
-                _clipEndBorder.MouseLeftButtonUp += new MouseButtonEventHandler(Clip_MouseLeftButtonUp);
-            }
-            if ((_clipAreaBorder = GetTemplateChild(Parid_clipAreaBorder) as Border) != null)
-            {
-                _clipAreaBorder.MouseLeftButtonDown += new MouseButtonEventHandler(Clip_MouseLeftButtonDown);
-                _clipAreaBorder.MouseMove += new MouseEventHandler(Clip_MouseMove);
-                _clipAreaBorder.MouseLeftButtonUp += new MouseButtonEventHandler(Clip_MouseLeftButtonUp);
-            }
-            if ((_clipStartBorder = GetTemplateChild(Parid_clipStartBorder) as Border) != null)
-            {
-                _clipStartBorder.MouseLeftButtonDown += new MouseButtonEventHandler(Clip_MouseLeftButtonDown);
-                _clipStartBorder.MouseMove += new MouseEventHandler(Clip_MouseMove);
-                _clipStartBorder.MouseLeftButtonUp += new MouseButtonEventHandler(Clip_MouseLeftButtonUp);
             }
             if ((_clipStateTimeTextBlock = GetTemplateChild(Parid_clipStateTimeTextBlock) as TextBlock) != null)
             {
@@ -1433,6 +1119,7 @@ namespace AradaTimeline
         #region Event
         private event EventHandler<VideoEventArgs> VideoLoaded;
         public event EventHandler<MarkerEventArgs> JoinButtonClick;
+        public event EventHandler<VideoEventArgs> TimePointMoved;
         #endregion
     }
 
@@ -1449,24 +1136,9 @@ namespace AradaTimeline
         public VideoStateAxisRoutedEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source) { }
 
         /// <summary>
-        /// Event type
-        /// </summary>
-        public VideoAxisActionType ActionType { get; set; }
-
-        /// <summary>
-        /// Is the camera selected
-        /// </summary>
-        public bool CameraChecked { get; set; }
-
-        /// <summary>
         /// Pointer time
         /// </summary>
         public TimeSpan TimeLine { get; set; }
-
-        /// <summary>
-        /// Is there a video in the download or collection range
-        /// </summary>
-        public bool DownAndFavoirteHaveVideo { get; set; }
     }
     /// <summary>
     /// Video parameter class
@@ -1476,6 +1148,11 @@ namespace AradaTimeline
         public TimeSpan Duration { get; set; }
         public int FrameRate { get; set; }
         public string VideoTitle { get; set; }
+        public List<Clip> Clips { get; set; }
+        public VideoEventArgs()
+        {
+            Clips = new List<Clip>();
+        }
     }
     public class MarkerEventArgs: EventArgs
     {
@@ -1488,62 +1165,84 @@ namespace AradaTimeline
         public TimeSpan Time { get; set; }
         public bool IsStarting { get; set; } = false;
     }
-    /// <summary>
-    /// Timeline control event type
-    /// </summary>
-    public enum VideoAxisActionType
+    public class Clip
     {
-        [Description("Download")]
-        Dwon,
-
-        [Description("Favorite")]
-        Favorite,
-
-        [Description("Open")]
-        Open
-    }
-
-    /// <summary>
-    /// Timeline object
-    /// </summary>
-    public class VideoStateItem : INotifyPropertyChanged
-    {
-        private string _cameraName;
-        public string CameraName
-        {
-            get => _cameraName;
-            set { _cameraName = value; OnPropertyChanged("CameraName"); }
-        }
-
-        private bool _cameraChedcked;
+        public string ClipName { get; set; }
+        internal double Length { get; set; }
+        internal double TrimLength { get; set; }
         /// <summary>
-        /// Is the camera selected
+        /// Clip Starting Time
         /// </summary>
-        public bool CameraChecked
-        {
-            get => _cameraChedcked;
-            set { _cameraChedcked = value; OnPropertyChanged("CameraChecked"); }
-        }
-
-        private char[] _axisHistoryTimeList;
+        public TimeSpan StartingTime { get; set; }
         /// <summary>
-        /// Camera history video video time set
+        /// Clip Ending Time
         /// </summary>
-        public char[] AxisHistoryTimeList
+        public TimeSpan EndingTime { get; set; }
+        internal Border Left { get; private set; }
+        internal Border Right { get; private set; }
+        internal Border Middle { get; private set; }
+        internal Border Trimmed { get; private set; } = new Border();
+        internal bool IsTrimmerLoaded { get; set; } = false;
+        internal TextBlock ClipText { get; set; }
+        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="")
         {
-            get => _axisHistoryTimeList;
-            set { _axisHistoryTimeList = value; OnPropertyChanged("AxisHistoryTimeList"); }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (handler != null)
+            Length = lenght;
+            TrimLength = trimLngth;
+            IsTrimmerLoaded = isTrimmerloaded;
+            ClipName = clipName;
+            if(IsTrimmerLoaded)
             {
-                handler(this, new PropertyChangedEventArgs(propertyName));
+                Trimmed = new Border()
+                {
+                    Width = trimLngth,
+                    Height = 90,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#123A61")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(1, 0, 1, 0),
+                    CornerRadius = new CornerRadius(2, 0, 0, 2),
+                    Margin = new Thickness(0, 55, 0, 0)
+                };
+                ClipText = new TextBlock()
+                {
+                    Text = ClipName,
+                    Margin = new Thickness(0, 55, 0, 0)
+                };
             }
+            else
+            {
+                Left = new Border()
+                {
+                    Width = 5,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#007ACC")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(0, 0, 1, 0),
+                    CornerRadius = new CornerRadius(2, 0, 0, 2),
+                    Margin = new Thickness(0, 50, 0, 0)
+                };
+                Middle = new Border()
+                {
+                    Width = Length,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF777777")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(0, 0, 1, 0),
+                    CornerRadius = new CornerRadius(2, 0, 0, 2),
+                    Margin = new Thickness(0, 50, 0, 0)
+                };
+                Right = new Border()
+                {
+                    Width = 5,
+                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF4500")),
+                    BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                    BorderThickness = new Thickness(1, 0, 0, 0),
+                    CornerRadius = new CornerRadius(0, 2, 2, 0),
+                    Margin = new Thickness(0, 50, 0, 0)
+                };
+            }
+            
+        }
+        internal void SetName()
+        {
+            ClipText.Text = ClipName;
         }
     }
 }
