@@ -13,7 +13,6 @@
     <SolidColorBrush x:Key="SliderThumb.Disabled.Border" Color="#FFD9D9D9" />
     <SolidColorBrush x:Key="SliderThumb.Static.Background" Color="#FFF0F0F0" />
     <SolidColorBrush x:Key="SliderThumb.Static.Border" Color="#FFACACAC" />
-    <!--  sider顶部滑块样式  -->
     <ControlTemplate x:Key="SliderThumbHorizontalTop" TargetType="{x:Type Thumb}">
         <Grid
             HorizontalAlignment="Center"
@@ -45,7 +44,6 @@
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
-    <!--  sider  -->
     <ControlTemplate x:Key="SliderThumbHorizontalBottom" TargetType="{x:Type Thumb}">
         <Grid
             HorizontalAlignment="Center"
@@ -95,7 +93,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <!--  Sider  -->
     <ControlTemplate x:Key="SliderThumbHorizontalDefault" TargetType="{x:Type Thumb}">
         <Grid
             HorizontalAlignment="Center"
@@ -127,7 +124,6 @@
             </Grid>
         </Grid>
     </ControlTemplate>
-    <!--    -->
     <ControlTemplate x:Key="SliderHorizontal" TargetType="{x:Type Slider}">
         <Border
             x:Name="border"
@@ -573,8 +569,6 @@
         <MenuItem x:Name="setStartingItm" Header="Set as Starting" Cursor="Hand" IsCheckable="True" Checked="setStartingItm_Checked" Unchecked="setStartingItm_Unchecked" Background="#FF333333" Foreground="White" BorderBrush="#FF333333"/>
         <MenuItem x:Name="removeItm" Header="Remove" Click="removeItm_Click" Background="#FF333333" BorderBrush="#FF333333" Foreground="White"/>
     </ContextMenu>
-
-    <!--  缩放时间轴滑块样式  -->
     <Style x:Key="sliderStyl" TargetType="{x:Type Slider}">
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
         <Setter Property="Background" Value="Transparent" />
@@ -590,7 +584,7 @@
 
     <BooleanToVisibilityConverter x:Key="BoolConveterVisibility"></BooleanToVisibilityConverter>
 
-    <!--  VideoStateAxisControl控件模板  -->
+    <!--  VideoStateAxisControl  -->
     <Style x:Name="VideoST" TargetType="{x:Type local:VideoStateAxisControl}">
         <Setter Property="Template">
             <Setter.Value>
@@ -644,6 +638,7 @@
                                                     <EventSetter Event="MouseEnter" Handler="Path_MouseEnter"/>
                                                     <EventSetter Event="MouseLeave" Handler="Path_MouseLeave"/>
                                                     <EventSetter Event="MouseRightButtonDown" Handler="Path_MouseRightButtonDown"/>
+                                                    <EventSetter Event="MouseDown" Handler="Path_MouseDown"/>
                                                 </Style>
                                             </Canvas.Resources>
                                         </Canvas>
@@ -674,7 +669,7 @@
                                                     Orientation="Horizontal">
                                                     <StackPanel.Resources>
                                                         <Style TargetType="{x:Type Border}">
-                                                            <Setter Property="Height" Value="100"/>
+                                                            <Setter Property="Height" Value="80"/>
                                                             <Setter Property="Margin" Value="0,50,0,0"/>
                                                         </Style>
                                                     </StackPanel.Resources>
@@ -711,6 +706,15 @@
                             Grid.Row="0"
                             Grid.RowSpan="3"
                             Panel.ZIndex="5">
+                                            <Canvas x:Name="Z_Parid_markerLine">
+                                                <Canvas.Resources>
+                                                    <Style TargetType="{x:Type Rectangle}">
+                                                        <Setter Property="Fill" Value="White"/>
+                                                        <Setter Property="Width" Value="2"/>
+                                                        <Setter Property="Height" Value="{Binding ActualHeight, ElementName=Z_Parid_scrollViewer}"/>
+                                                    </Style>
+                                                </Canvas.Resources>
+                                            </Canvas>
                                             <Canvas x:Name="Z_Parid_timeLine">
                                                 <Rectangle
                                     Width="1"
