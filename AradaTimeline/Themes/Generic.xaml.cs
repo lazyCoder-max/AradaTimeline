@@ -32,7 +32,17 @@ namespace AradaTimeline
         }
         private void removeItm_Click(object sender, RoutedEventArgs e)
         {
-            var index = Array.FindIndex(VideoStateAxisControl.Markers, val => val.Name == SelectedPath.Name);
+            int index = 0;
+            if (VideoStateAxisControl.Markers[0] != null)
+            {
+                index = Array.FindIndex(VideoStateAxisControl.Markers, val => val.Name == SelectedPath.Name);
+                VideoStateAxisControl._markerLine.Children.RemoveAt(index);
+            }
+            else
+            {
+                index = 1;
+                VideoStateAxisControl._markerLine.Children.RemoveAt(0);
+            }
             VideoStateAxisControl.Markers[index] = null;
             SaveBtn.Visibility = Visibility.Hidden;
             VideoStateAxisControl._axisCanvasMarker.Children.Remove(SelectedPath);
@@ -107,6 +117,28 @@ namespace AradaTimeline
         private void Line_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             VideoStateAxisControl.VideoControl._currentTime.Visibility = Visibility.Collapsed;
+        }
+
+        private void Path_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if(e.ClickCount>=2)
+            {
+                SelectedPath = (Path)sender;
+                int index = 0;
+                if (VideoStateAxisControl.Markers[0] != null)
+                {
+                    index = Array.FindIndex(VideoStateAxisControl.Markers, val => val.Name == SelectedPath.Name);
+                    VideoStateAxisControl._markerLine.Children.RemoveAt(index);
+                }
+                else
+                {
+                    index = 1;
+                    VideoStateAxisControl._markerLine.Children.RemoveAt(0);
+                }
+                VideoStateAxisControl.Markers[index] = null;
+                SaveBtn.Visibility = Visibility.Hidden;
+                VideoStateAxisControl._axisCanvasMarker.Children.Remove(SelectedPath);
+            }
         }
     }
 }

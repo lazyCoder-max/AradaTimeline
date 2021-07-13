@@ -20,7 +20,7 @@ using System.Windows.Shapes;
 
 namespace AradaTimeline
 {
-    #region TemplatePart 模板元素声明
+    #region TemplatePart
 
     [TemplatePart(Name = Parid_axisCanvas)]
     [TemplatePart(Name = Parid_timePoint)]
@@ -44,7 +44,7 @@ namespace AradaTimeline
     [TemplatePart(Name = Parid_downButtonListBox)]
     [TemplatePart(Name = Parid_clipTrim)]
     [TemplatePart(Name = Parid_clipName)]
-
+    [TemplatePart(Name = Parid_markerLine)]
     #endregion
     public class VideoStateAxisControl : Control
     {
@@ -66,10 +66,7 @@ namespace AradaTimeline
         private Canvas _clipName;
         private TextBlock _clipStateTimeTextBlock;     //Clip start time indicator
         private TextBlock _clipEndTimeTextBlock;      //Clip end time indicator
-
-        private ListBox _cameraListBox;                    //Camera list
-        private ListBox _downButtonListBox;             //Download list
-
+        internal static Canvas _markerLine;
         #endregion
 
         #region ConstString Template element name, Geometry image data
@@ -96,6 +93,7 @@ namespace AradaTimeline
         private const string Parid_clipEndTimeTextBlock = "Z_Parid_clipEndTimeTextBlock";
         private const string Parid_cameraListBox = "Z_Parid_cameraListBox";
         private const string Parid_downButtonListBox = "Z_Parid_downButtonListBox";
+        private const string Parid_markerLine = "Z_Parid_markerLine";
         private const string GeometryMarker = "M17,4c0,2.69,0.001,7.441,0.001,10.086C14.13,14.387,12.74,15.951,12,17.611c-0.74-1.66-2.13-3.224-5.001-3.525 C6.999,11.442,6.999,6.69,7,4H17 M18,2H6C5.448,2,5,2.445,5,2.997c0,2.591-0.001,9.51-0.001,12.05c0,0.515,0.394,0.987,0.908,0.987 c0.002,0,0.003,0,0.005,0c0.017,0,0.035,0,0.052,0c6.024,0,4.041,5.971,6.036,7.966c1.994-1.994,0.01-7.966,6.036-7.966 c0.017,0,0.035,0,0.052,0c0.002,0,0.003,0,0.005,0c0.514,0,0.908-0.472,0.908-0.987c0.001-2.54,0-9.459-0.001-12.05 C19,2.445,18.552,2,18,2L18,2z";
 
         #endregion
@@ -180,10 +178,6 @@ namespace AradaTimeline
         private double Dial_Cell_H
         {
             get { return _scrollViewer == null ? 0 : ((_scrollViewer.ActualWidth - 10) * Slider_Magnification) / EventArgs.Duration.TotalHours; }
-        }
-        private double Dial_Cell_M2
-        {
-            get { return _scrollViewer == null ? 0 : ((_scrollViewer.ActualWidth - 10) * Slider_Magnification) / 1444; }
         }
 
         /// <summary>
@@ -850,6 +844,13 @@ namespace AradaTimeline
                     Margin = new Thickness(left - 12, 2, 0, 0),
                     Name = $"Marker{GetEmptyMarkerIndex}"
                 };
+                var rectangle = new Rectangle()
+                {
+                    Margin = new Thickness(left-5.8, 20, 0, 0),
+                    Name = $"MarkerLine{GetEmptyMarkerIndex}"
+                };
+                _markerLine.Children.Add(rectangle);
+                _markerLine.RegisterName(rectangle.Name, rectangle);
                 _axisCanvasMarker.Children.Add(path);
                 _axisCanvasMarker.RegisterName(path.Name, path);
                 Marker marker = new Marker()
@@ -857,7 +858,8 @@ namespace AradaTimeline
                     Name = $"Marker{GetEmptyMarkerIndex}",
                     MarkerPoint = left,
                     IsStarting = IsStartingPoint,
-                    Time = AxisTime
+                    Time = AxisTime,
+                    MarkerLine = rectangle
                 };
                 Markers[GetEmptyMarkerIndex] = marker;
                 if (GetEmptyMarkerIndex == 0)
@@ -868,6 +870,7 @@ namespace AradaTimeline
         internal void DrawMarker()
         {
             _axisCanvasMarker.Children.Clear();
+            _markerLine.Children.Clear();
             if(Markers!=null)
             {
                 for (int i = 0; i < Markers.Count(); i++)
@@ -881,11 +884,25 @@ namespace AradaTimeline
                             Margin = new Thickness(left, 2, 0, 0),
                             Name = Markers[i].Name
                         };
+                        var rectangle = new Rectangle()
+                        {
+                            Margin = new Thickness(left+5.8, 20, 0, 0),
+                            Name = $"MarkerLine{i}"
+                        };
+                        _markerLine.Children.Add(rectangle);
+                        _markerLine.RegisterName(rectangle.Name, rectangle);
                         _axisCanvasMarker.Children.Add(path);
                         _axisCanvasMarker.RegisterName(path.Name, path);
                     }
                 }
             }
+        }
+        public void ClearMarkers()
+        {
+            Markers[0] = null;
+            Markers[1] = null;
+            _markerLine.Children.Clear();
+            _axisCanvasMarker.Children.Clear();
         }
         private void DrawClip(List<Clip> clips)
         {
@@ -977,7 +994,11 @@ namespace AradaTimeline
                 double width = Dial_Cell_H * (ts.Days == 1 ? 23 : ts.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : ts.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : ts.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : ts.Milliseconds);
                 if(width>0)
                 {
-                    clip.Middle.Width = width;
+                    var result = width - 10;
+                    if (result > 0)
+                        clip.Middle.Width = result;
+                    else
+                        clip.Middle.Width = 0;
                     clip.Length = width;
                 }
                 else
@@ -1055,6 +1076,7 @@ namespace AradaTimeline
             _clip = GetTemplateChild(Parid_clip) as StackPanel;
             _clipTrim = GetTemplateChild(Parid_clipTrim) as Canvas;
             _clipName = GetTemplateChild(Parid_clipName) as Canvas;
+            _markerLine = GetTemplateChild(Parid_markerLine) as Canvas;
             if ((_zoomSlider = GetTemplateChild(Parid_zoomSlider) as Slider) != null)
             {
                 _zoomSlider.ValueChanged += new RoutedPropertyChangedEventHandler<double>(_zoomSlider_ValueChanged);
@@ -1082,16 +1104,6 @@ namespace AradaTimeline
             {
                 Binding binding = new Binding("ClipEndTime") { Source = this, StringFormat = " [ yyyy-MM-dd ] HH:mm:ss " };
                 _clipEndTimeTextBlock.SetBinding(TextBlock.TextProperty, binding);
-            }
-            if ((_cameraListBox = GetTemplateChild(Parid_cameraListBox) as ListBox) != null)
-            {
-                Binding binding = new Binding("HisVideoSources") { Source = this };
-                _cameraListBox.SetBinding(ListBox.ItemsSourceProperty, binding);
-            }
-            if ((_downButtonListBox = GetTemplateChild(Parid_downButtonListBox) as ListBox) != null)
-            {
-                Binding binding = new Binding("HisVideoSources") { Source = this };
-                _downButtonListBox.SetBinding(ListBox.ItemsSourceProperty, binding);
             }
         }
 
@@ -1164,6 +1176,7 @@ namespace AradaTimeline
         public double MarkerPoint { get; set; } = 0;
         public TimeSpan Time { get; set; }
         public bool IsStarting { get; set; } = false;
+        internal Rectangle MarkerLine { get; set; }
     }
     public class Clip
     {
@@ -1195,7 +1208,7 @@ namespace AradaTimeline
                 Trimmed = new Border()
                 {
                     Width = trimLngth,
-                    Height = 90,
+                    Height = 70,
                     Background = (Brush)(new BrushConverter().ConvertFrom("#123A61")),
                     BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
                     BorderThickness = new Thickness(1, 0, 1, 0),
