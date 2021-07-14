@@ -132,7 +132,7 @@ namespace AradaTimeline
         /// <summary>
         /// Get Markers Information
         /// </summary>
-        public static Marker[] Markers { get; internal set; }
+        public static List<Marker> Markers { get; internal set; }
         public double ScrollValue
         {
             get { return (double)_zoomSlider.Value; }
@@ -835,35 +835,43 @@ namespace AradaTimeline
         public void DrawMarker(double left, bool IsStartingPoint = false)
         {
             if (Markers == null)
-                Markers = new Marker[2];
+                Markers = new List<Marker>();
             if (IsMarkerListFull == false && IsMarkerExist(left) == false)
             {
                 var path = new Path()
                 {
                     Data = Geometry.Parse(GeometryMarker),
                     Margin = new Thickness(left - 12, 2, 0, 0),
-                    Name = $"Marker{GetEmptyMarkerIndex}"
+                    Name = $"Marker{Markers.Count}"
                 };
                 var rectangle = new Rectangle()
                 {
                     Margin = new Thickness(left-5.8, 20, 0, 0),
-                    Name = $"MarkerLine{GetEmptyMarkerIndex}"
+                    Name = $"MarkerLine{Markers.Count}"
                 };
-                _markerLine.Children.Add(rectangle);
-                _markerLine.RegisterName(rectangle.Name, rectangle);
-                _axisCanvasMarker.Children.Add(path);
-                _axisCanvasMarker.RegisterName(path.Name, path);
                 Marker marker = new Marker()
                 {
-                    Name = $"Marker{GetEmptyMarkerIndex}",
+                    Name = $"Marker{Markers.Count}",
                     MarkerPoint = left,
                     IsStarting = IsStartingPoint,
                     Time = AxisTime,
                     MarkerLine = rectangle
                 };
-                Markers[GetEmptyMarkerIndex] = marker;
-                if (GetEmptyMarkerIndex == 0)
-                    Generic.SaveBtn.Visibility = Visibility.Visible;
+                if (Markers.Count == 1)
+                {
+                    marker.IsStarting = false;
+                }
+                else
+                {
+                    marker.IsStarting = true;
+                    path.Data = Geometry.Parse("M18.088,16.035C12,16,14,22,12,24c-2-2,0-8-6.088-7.965c-0.516,0.003-0.913-0.471-0.913-0.987 c-0.001-2.54,0-9.459,0.001-12.05C5,2.445,5.448,2,6,2h12c0.552,0,1,0.445,1,0.997c0,2.591,0.001,9.51,0.001,12.05 C19.001,15.564,18.604,16.037,18.088,16.035z");
+                }
+                _markerLine.Children.Add(rectangle);
+                _markerLine.RegisterName(rectangle.Name, rectangle);
+                _axisCanvasMarker.Children.Add(path);
+                _axisCanvasMarker.RegisterName(path.Name, path);
+                Markers.Add(marker);
+                
             }
 
         }
@@ -884,6 +892,11 @@ namespace AradaTimeline
                             Margin = new Thickness(left, 2, 0, 0),
                             Name = Markers[i].Name
                         };
+                        if(i==0)
+                        {
+                            path.Data = Geometry.Parse("M18.088,16.035C12,16,14,22,12,24c-2-2,0-8-6.088-7.965c-0.516,0.003-0.913-0.471-0.913-0.987 c-0.001-2.54,0-9.459,0.001-12.05C5,2.445,5.448,2,6,2h12c0.552,0,1,0.445,1,0.997c0,2.591,0.001,9.51,0.001,12.05 C19.001,15.564,18.604,16.037,18.088,16.035z");
+                            Markers[i].IsStarting = true;
+                        }
                         var rectangle = new Rectangle()
                         {
                             Margin = new Thickness(left+5.8, 20, 0, 0),
@@ -1014,47 +1027,22 @@ namespace AradaTimeline
         {
             get
             {
-                if(Markers!=null)
-                {
-                    if (Markers[0] != null && Markers[1] != null)
-                        return true;
-                }
+                if (Markers.Count == 2)
+                    return true;
                 return false;
             }
         }
         private bool IsMarkerExist(double left)
         {
-            if(Markers!=null)
+            if(Markers.Count>=1)
             {
-                if(Markers[0]!=null)
-                {
-                    if (Markers[0].MarkerPoint == left)
-                        return true;
-                }
-                else if(Markers[1] != null)
-                {
+                if (Markers[0].MarkerPoint == left)
+                    return true;
+                if(Markers.Count>=2)
                     if (Markers[1].MarkerPoint == left)
-                        return true;
-                }
-                
+                        return true;  
             }
             return false;
-        }
-        private int GetEmptyMarkerIndex
-        {
-            get
-            {
-                if(Markers!=null)
-                {
-                    if (Markers[0] == null)
-                        return 0;
-                    else if (Markers[1] == null)
-                        return 1;
-                    else if(Markers[1]!=null && Markers[0]!=null)
-                        return 0;
-                }
-                return -1;
-            }
         }
         #endregion
         /// <summary>
@@ -1168,7 +1156,7 @@ namespace AradaTimeline
     }
     public class MarkerEventArgs: EventArgs
     {
-        public Marker[] Markers { get; set; }
+        public List<Marker> Markers { get; set; }
     }
     public class Marker
     {

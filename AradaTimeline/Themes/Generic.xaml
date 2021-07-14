@@ -566,7 +566,6 @@
 
     <!--Context Menu-->
     <ContextMenu x:Key="MarkerMenu">
-        <MenuItem x:Name="setStartingItm" Header="Set as Starting" Cursor="Hand" IsCheckable="True" Checked="setStartingItm_Checked" Unchecked="setStartingItm_Unchecked" Background="#FF333333" Foreground="White" BorderBrush="#FF333333"/>
         <MenuItem x:Name="removeItm" Header="Remove" Click="removeItm_Click" Background="#FF333333" BorderBrush="#FF333333" Foreground="White"/>
     </ContextMenu>
     <Style x:Key="sliderStyl" TargetType="{x:Type Slider}">
