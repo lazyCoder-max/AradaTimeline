@@ -411,10 +411,6 @@ namespace AradaTimeline
             TimeSpan ts = dt - StartTime;
             if (_timeLine != null)
             {
-                var n = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) +
-                    Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) +
-                    Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) +
-                    Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
                 Canvas.SetLeft(_timeLine,
                     Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) +
                     Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) +
@@ -440,11 +436,6 @@ namespace AradaTimeline
                 return n;
             }
             return 0;
-        }
-        public double GetTimelineWidth()
-        {
-            double timePoint = _timePanel.ActualWidth - _timePoint.ActualWidth;
-            return timePoint;
         }
         /// <summary>
         /// Time zoom slider event
@@ -495,7 +486,41 @@ namespace AradaTimeline
                 TimeLine_Resver(delta);
             }
         }
-        public void MoveTimePoint(double position)
+        public void MoveLeft(double frameRate = 25)
+        {
+            if (nextPoint < 0)
+                nextPoint = 0;
+            if (AxisTime >= VideoDuration)
+            {
+                previousPoint = nextPoint;
+                nextPoint = GetSeekMarkerPoint;
+            }
+            frameRate = 1000 / frameRate;
+            if (AxisTime >= VideoDuration)
+                nextPoint = previousPoint;
+            nextPoint -= frameRate;
+            MoveTimePoint(GetDelta(TimeSpan.FromMilliseconds(nextPoint)));
+        }
+        private double nextPoint=0;
+        private double previousPoint=0;
+        public void MoveRight(double frameRate=25)
+        {
+            if (AxisTime >= VideoDuration)
+            {
+                previousPoint = nextPoint;
+                nextPoint = GetSeekMarkerPoint;
+            }
+            frameRate = 1000 / frameRate;
+            nextPoint += frameRate;
+            if (AxisTime >= VideoDuration)
+            {
+                MoveTimePoint(previousPoint);
+                nextPoint = previousPoint;
+            }
+            else
+                MoveTimePoint(GetDelta(TimeSpan.FromMilliseconds(nextPoint)));
+        }
+        private void MoveTimePoint(double position)
         {
             double delta = position;
             double timePointMaxLeft = _timePanel.ActualWidth - _timePoint.ActualWidth;
