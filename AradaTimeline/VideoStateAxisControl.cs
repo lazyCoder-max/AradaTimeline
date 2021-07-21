@@ -124,7 +124,7 @@ namespace AradaTimeline
 
         #region Property 
         private VideoEventArgs VideoEvent { get; set; }
-        private List<Clip> ClipList { get; set; }
+        internal List<Clip> ClipList { get; set; }
         private List<Clip> TrimmedClipList { get; set; }
         private bool IsClipStartTimeCalculated { get; set; } = false;
         internal static VideoStateAxisControl VideoControl { get; set; }
@@ -264,7 +264,10 @@ namespace AradaTimeline
         }
         protected virtual void OnJoinButtonClicked()
         {
-            JoinButtonClick?.Invoke(this, new MarkerEventArgs() { Markers = Markers });
+            var markerEventArg = new MarkerEventArgs() { Markers = Markers };
+            markerEventArg.Markers[0].GetClip(ClipList);
+            markerEventArg.Markers[1].GetClip(ClipList);
+            JoinButtonClick?.Invoke(this, markerEventArg);
         }
         public void LoadVideo(VideoEventArgs video)
         {
@@ -408,6 +411,10 @@ namespace AradaTimeline
             TimeSpan ts = dt - StartTime;
             if (_timeLine != null)
             {
+                var n = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) +
+                    Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) +
+                    Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) +
+                    Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
                 Canvas.SetLeft(_timeLine,
                     Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) +
                     Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) +
@@ -415,6 +422,29 @@ namespace AradaTimeline
                     Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds));
                 _currentTime.Text = dt.ToString();
             }
+        }
+        /// <summary>
+        /// Convert Datetime to Width
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public double GetDelta(TimeSpan dt)
+        {
+            TimeSpan ts = dt - StartTime;
+            if (_timeLine != null)
+            {
+                var n = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) +
+                    Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) +
+                    Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) +
+                    Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
+                return n;
+            }
+            return 0;
+        }
+        public double GetTimelineWidth()
+        {
+            double timePoint = _timePanel.ActualWidth - _timePoint.ActualWidth;
+            return timePoint;
         }
         /// <summary>
         /// Time zoom slider event
@@ -449,7 +479,6 @@ namespace AradaTimeline
             _axisCanvas.Margin = new Thickness(0, _scrollViewer.VerticalOffset, 0, 0);
             _clipCanvas.Margin = new Thickness(0, _scrollViewer.VerticalOffset, 0, 0);
         }
-
 
         /// <summary>
         ///   Pointer movement
@@ -541,7 +570,6 @@ namespace AradaTimeline
             MS = (int)((time - S) * 1000);
             return dt.Add(new TimeSpan(0,H,M,S,MS));
         }
-
         /// <summary>
         /// initialization
         /// </summary>
@@ -880,6 +908,7 @@ namespace AradaTimeline
                     }
                     else
                         marker.IsStarting = false;
+                    Generic.SaveBtn.Visibility = Visibility.Visible;
                 }
                 else
                 {
@@ -1181,15 +1210,25 @@ namespace AradaTimeline
     }
     public class Marker
     {
+        public Clip Clip { get; set; }
         public string Name { get; set; }
         public double MarkerPoint { get; set; } = 0;
         public TimeSpan Time { get; set; }
         public bool IsStarting { get; set; } = false;
         internal Rectangle MarkerLine { get; set; }
+        internal Clip GetClip(List<Clip> clips)
+        {
+            Clip = clips.Where(x => Time>= x.StartingTime && Time<= x.EndingTime).FirstOrDefault();
+            return Clip;
+        }
     }
     public class Clip
     {
+        public int ClipId { get; set; }
         public string ClipName { get; set; }
+        public string ClipCountry { get; set; }
+        public string ClipUrl { get; set; }
+        public TimeSpan Duration { get; set; }
         internal double Length { get; set; }
         internal double TrimLength { get; set; }
         /// <summary>

@@ -11,7 +11,7 @@ namespace AradaTimeline
     public partial class Generic:ResourceDictionary
     {
         private Path SelectedPath { get; set; }
-        internal static Path SaveBtn { get; set; }
+        internal static Button SaveBtn { get; set; }
         internal static string StartingName { get; set; } = "Marker0";
         private void Path_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
@@ -47,27 +47,10 @@ namespace AradaTimeline
             }
             SaveBtn.Visibility = Visibility.Hidden;
         }
-
-        private void joinBtn_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            VideoStateAxisControl.VideoControl.InvokeJoinButton();
-        }
-
         private void joinBtn_Initialized(object sender, EventArgs e)
         {
-            SaveBtn =(Path)sender;
+            SaveBtn =(Button)sender;
             SaveBtn.Visibility = Visibility.Hidden;
-        }
-
-        private void joinBtn_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            SaveBtn.Fill = (Brush)(new BrushConverter().ConvertFrom("#FFFFFFFF"));
-        }
-
-        private void joinBtn_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-           SaveBtn.Fill=  (Brush)(new BrushConverter().ConvertFrom("#c8c7c3"));
-        
         }
         private void Z_Parid__axisCanvasTimeText_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
@@ -114,6 +97,11 @@ namespace AradaTimeline
                 SaveBtn.Visibility = Visibility.Hidden;
                 VideoStateAxisControl._axisCanvasMarker.Children.Remove(SelectedPath);
             }
+        }
+
+        private void joinBtn_Click(object sender, RoutedEventArgs e)
+        {
+            VideoStateAxisControl.VideoControl.InvokeJoinButton();
         }
     }
 }
