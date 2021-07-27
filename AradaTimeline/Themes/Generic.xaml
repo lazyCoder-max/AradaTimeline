@@ -566,7 +566,7 @@
 
     <!--Context Menu-->
     <ContextMenu x:Key="MarkerMenu">
-        <MenuItem x:Name="removeItm" Header="Remove" Click="removeItm_Click" Background="#FF333333" BorderBrush="#FF333333" Foreground="White"/>
+        <MenuItem x:Name="removeItm" Header="Remove" Click="removeItm_Click" Background="#FF333333" BorderBrush="#FF333333" Foreground="White" ToolTip=""/>
     </ContextMenu>
     <Style x:Key="sliderStyl" TargetType="{x:Type Slider}">
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />

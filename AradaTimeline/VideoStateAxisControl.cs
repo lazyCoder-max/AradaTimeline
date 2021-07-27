@@ -488,6 +488,8 @@ namespace AradaTimeline
         }
         public void MoveLeft(double frameRate = 25)
         {
+            if (Double.IsInfinity(frameRate) || frameRate >= Double.MaxValue || frameRate == 0)
+                frameRate = 25;
             if (nextPoint < 0)
                 nextPoint = 0;
             if (AxisTime >= VideoDuration)
@@ -501,10 +503,18 @@ namespace AradaTimeline
             nextPoint -= frameRate;
             MoveTimePoint(GetDelta(TimeSpan.FromMilliseconds(nextPoint)));
         }
+        public void ResetSeekerPosition()
+        {
+            nextPoint = -1;
+            previousPoint = 0;
+            MoveLeft();
+        }
         private double nextPoint=0;
         private double previousPoint=0;
         public void MoveRight(double frameRate=25)
         {
+            if (Double.IsInfinity(frameRate) || frameRate>= Double.MaxValue || frameRate==0)
+                frameRate = 25;
             if (AxisTime >= VideoDuration)
             {
                 previousPoint = nextPoint;
@@ -592,7 +602,7 @@ namespace AradaTimeline
             M = (int)(time);
             time = (time - M) * 60;
             S = (int)time;
-            MS = (int)((time - S) * 1000);
+            MS = (int)((time - S) * 1001);
             return dt.Add(new TimeSpan(0,H,M,S,MS));
         }
         /// <summary>
