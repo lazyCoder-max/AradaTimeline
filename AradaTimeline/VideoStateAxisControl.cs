@@ -490,17 +490,10 @@ namespace AradaTimeline
         {
             if (Double.IsInfinity(frameRate) || frameRate >= Double.MaxValue || frameRate == 0)
                 frameRate = 25;
+            frameRate = 1000 / frameRate;
+            nextPoint -= frameRate;
             if (nextPoint < 0)
                 nextPoint = 0;
-            if (AxisTime >= VideoDuration)
-            {
-                previousPoint = nextPoint;
-                nextPoint = GetSeekMarkerPoint;
-            }
-            frameRate = 1000 / frameRate;
-            if (AxisTime >= VideoDuration)
-                nextPoint = previousPoint;
-            nextPoint -= frameRate;
             MoveTimePoint(GetDelta(TimeSpan.FromMilliseconds(nextPoint)));
         }
         public void ResetSeekerPosition()
@@ -515,20 +508,14 @@ namespace AradaTimeline
         {
             if (Double.IsInfinity(frameRate) || frameRate>= Double.MaxValue || frameRate==0)
                 frameRate = 25;
-            if (AxisTime >= VideoDuration)
-            {
-                previousPoint = nextPoint;
-                nextPoint = GetSeekMarkerPoint;
-            }
             frameRate = 1000 / frameRate;
             nextPoint += frameRate;
             if (AxisTime >= VideoDuration)
             {
-                MoveTimePoint(previousPoint);
-                nextPoint = previousPoint;
+                previousPoint = nextPoint;
+                nextPoint -= frameRate;
             }
-            else
-                MoveTimePoint(GetDelta(TimeSpan.FromMilliseconds(nextPoint)));
+            MoveTimePoint(GetDelta(TimeSpan.FromMilliseconds(nextPoint)));
         }
         private void MoveTimePoint(double position)
         {
