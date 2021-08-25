@@ -224,8 +224,8 @@ namespace AradaTimeline
             typeof(EventHandler<VideoStateAxisRoutedEventArgs>),
             typeof(VideoStateAxisControl));
 
-        public static readonly RoutedEvent DragTimeLineRoutedEvent = EventManager.RegisterRoutedEvent(
-            "DragTimeLine",
+        public static readonly RoutedEvent DragTimeLineLeaveRoutedEvent = EventManager.RegisterRoutedEvent(
+            "DragTimeLineLeave",
             RoutingStrategy.Bubble,
             typeof(EventHandler<VideoStateAxisRoutedEventArgs>),
             typeof(VideoStateAxisControl));
@@ -241,12 +241,11 @@ namespace AradaTimeline
         /// <summary>
         /// Pointer drag event
         /// </summary>
-        public event RoutedEventHandler DragTimeLine
+        public event RoutedEventHandler DragTimeLineLeave
         {
-            add { this.AddHandler(DragTimeLineRoutedEvent, value); }
-            remove { this.RemoveHandler(DragTimeLineRoutedEvent, value); }
+            add { this.AddHandler(DragTimeLineLeaveRoutedEvent, value); }
+            remove { this.RemoveHandler(DragTimeLineLeaveRoutedEvent, value); }
         }
-
         #endregion
 
         #region Method 
@@ -258,9 +257,9 @@ namespace AradaTimeline
         {
             OnJoinButtonClicked();
         }
-        public void OnMarkerKeyPressed()
+        public void OnMarkerKeyPressed(TimeSpan segmentTime)
         {
-            MarkerKeyPressed?.Invoke(this, new VideoEventArgs());
+            MarkerKeyPressed?.Invoke(this, new VideoEventArgs() {Segment = segmentTime });
         }
         protected virtual void OnJoinButtonClicked()
         {
@@ -286,7 +285,7 @@ namespace AradaTimeline
 
         private void VideoStateAxisControl_MarkerKeyPressed(object sender, VideoEventArgs e)
         {
-            DrawMarker(GetSeekMarkerPoint);
+            DrawMarker(GetSeekMarkerPoint,e.Segment);
         }
 
         /// <summary>
@@ -484,6 +483,7 @@ namespace AradaTimeline
                 double timePointMaxLeft = _timePanel.ActualWidth - _timePoint.ActualWidth;
                 Canvas.SetLeft(_timeLine, delta = delta < 0 ? 0 : (delta > timePointMaxLeft ? timePointMaxLeft : delta));
                 TimeLine_Resver(delta);
+                SendDragTimeLineEnterRoutedEvent();
             }
         }
         public void MoveLeft(double frameRate = 25)
@@ -498,12 +498,10 @@ namespace AradaTimeline
         }
         public void ResetSeekerPosition()
         {
-            nextPoint = -1;
-            previousPoint = 0;
-            MoveLeft();
+            nextPoint = 0;
+            MoveRight();
         }
         private double nextPoint=0;
-        private double previousPoint=0;
         public void MoveRight(double frameRate=25)
         {
             if (Double.IsInfinity(frameRate) || frameRate>= Double.MaxValue || frameRate==0)
@@ -512,7 +510,6 @@ namespace AradaTimeline
             nextPoint += frameRate;
             if (AxisTime >= VideoDuration)
             {
-                previousPoint = nextPoint;
                 nextPoint -= frameRate;
             }
             MoveTimePoint(GetDelta(TimeSpan.FromMilliseconds(nextPoint)));
@@ -524,7 +521,10 @@ namespace AradaTimeline
             Canvas.SetLeft(_timeLine, delta = delta < 0 ? 0 : (delta > timePointMaxLeft ? timePointMaxLeft : delta));
             TimeLine_Resver(delta);
         }
-
+        public void StepForward(TimeSpan timePoint)
+        {
+            MoveTimePoint(GetDelta(timePoint));
+        }
         /// <summary>
         /// Refresh time indicator coordinate position
         /// </summary>
@@ -539,6 +539,8 @@ namespace AradaTimeline
                 new Thickness(delta > timePointMaxLeft ? timePointMaxLeft - _currentTime.ActualWidth : delta - _currentTime.ActualWidth, 2, 0, 0);
             GetSeekMarkerPoint= _currentTime.Margin.Left;
             OnTimePointMoved(VideoEvent);
+            nextPoint = AxisTime.TotalMilliseconds;
+
         }
         /// <summary>
         /// Pointer down
@@ -549,18 +551,24 @@ namespace AradaTimeline
         {
             _currentTime.Visibility = Visibility.Visible;
             _timePoint.CaptureMouse();
+            
         }
 
         /// <summary>
         /// Post pointer drag routing event
         /// </summary>
-        private void SendDragTimeLineRoutedEvent()
+        private void SendDragTimeLineLeaveRoutedEvent()
         {
-            VideoStateAxisRoutedEventArgs args = new VideoStateAxisRoutedEventArgs(DragTimeLineRoutedEvent, this)
+            VideoStateAxisRoutedEventArgs args = new VideoStateAxisRoutedEventArgs(DragTimeLineLeaveRoutedEvent, this)
             {
                 TimeLine = AxisTime
             };
             this.RaiseEvent(args);
+        }
+        internal void SendDragTimeLineEnterRoutedEvent()
+        {
+            nextPoint = AxisTime.TotalMilliseconds;
+            DragTimeLineEnter?.Invoke(this, EventArgs);
         }
         /// <summary>
         /// Pointer bounce
@@ -571,7 +579,7 @@ namespace AradaTimeline
         {
             _currentTime.Visibility = Visibility.Collapsed;
             _timePoint.ReleaseMouseCapture();
-            SendDragTimeLineRoutedEvent();
+            SendDragTimeLineLeaveRoutedEvent();
         }
 
         /// <summary>
@@ -892,7 +900,7 @@ namespace AradaTimeline
         /// Draw a Marker on a given point
         /// </summary>
         /// <param name="left"></param>
-        public void DrawMarker(double left, bool IsStartingPoint = false)
+        public void DrawMarker(double left,TimeSpan segment, bool IsStartingPoint = false)
         {
             if (Markers == null)
                 Markers = new List<Marker>();
@@ -915,7 +923,8 @@ namespace AradaTimeline
                     MarkerPoint = left,
                     IsStarting = IsStartingPoint,
                     Time = AxisTime,
-                    MarkerLine = rectangle
+                    MarkerLine = rectangle,
+                    SegmentTime = segment
                 };
                 if (Markers.Count == 1)
                 {
@@ -929,7 +938,9 @@ namespace AradaTimeline
                         Generic.StartingName = "Marker1";
                     }
                     else
+                    {
                         marker.IsStarting = false;
+                    }
                     Generic.SaveBtn.Visibility = Visibility.Visible;
                 }
                 else
@@ -1041,7 +1052,7 @@ namespace AradaTimeline
             {
                 double left = Dial_Cell_H * (ts.Days == 1 ? 23 : dt.Hours) + Dial_Cell_M * (ts.Days == 1 ? 59 : dt.Minutes) + Dial_Cell_S * (ts.Days == 1 ? 59 : dt.Seconds) + Dial_Cell_MiS * (ts.Days == 1 ? 999 : dt.Milliseconds);
                 item.Margin = new Thickness(left, 55, 0, 0);
-                itemText.Margin = new Thickness(left, 55, 0, 0);
+                itemText.Margin = new Thickness(left+20, 75, 0, 0);
             }
         }
         /// <summary>
@@ -1192,6 +1203,7 @@ namespace AradaTimeline
         public event EventHandler<MarkerEventArgs> JoinButtonClick;
         public event EventHandler<VideoEventArgs> TimePointMoved;
         private event EventHandler<VideoEventArgs> MarkerKeyPressed;
+        public event EventHandler<VideoEventArgs> DragTimeLineEnter;
         #endregion
     }
 
@@ -1221,6 +1233,7 @@ namespace AradaTimeline
         public int FrameRate { get; set; }
         public string VideoTitle { get; set; }
         public List<Clip> Clips { get; set; }
+        internal TimeSpan Segment { get; set; }
         public VideoEventArgs()
         {
             Clips = new List<Clip>();
@@ -1237,6 +1250,10 @@ namespace AradaTimeline
         public double MarkerPoint { get; set; } = 0;
         public TimeSpan Time { get; set; }
         public bool IsStarting { get; set; } = false;
+        /// <summary>
+        /// Marker Time on Segmented Video
+        /// </summary>
+        public TimeSpan SegmentTime { get; set; }
         internal Rectangle MarkerLine { get; set; }
         internal Clip GetClip(List<Clip> clips)
         {
@@ -1264,7 +1281,7 @@ namespace AradaTimeline
         internal Border Left { get; private set; }
         internal Border Right { get; private set; }
         internal Border Middle { get; private set; }
-        internal Border Trimmed { get; private set; } = new Border();
+        internal Border Trimmed { get; private set; }
         internal bool IsTrimmerLoaded { get; set; } = false;
         internal TextBlock ClipText { get; set; }
         public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="")
@@ -1322,6 +1339,24 @@ namespace AradaTimeline
                 };
             }
             
+        }
+        public void InitiallizeTrimmer()
+        {
+            Trimmed = new Border()
+            {
+                Width = 25,
+                Height = 70,
+                Background = (Brush)(new BrushConverter().ConvertFrom("#123A61")),
+                BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
+                BorderThickness = new Thickness(1, 0, 1, 0),
+                CornerRadius = new CornerRadius(2, 0, 0, 2),
+                Margin = new Thickness(0, 55, 0, 0)
+            };
+            ClipText = new TextBlock()
+            {
+                Text = ClipName,
+                Margin = new Thickness(0, 55, 0, 0)
+            };
         }
         internal void SetName()
         {

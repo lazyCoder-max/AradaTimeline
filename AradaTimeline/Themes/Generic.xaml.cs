@@ -103,5 +103,6 @@ namespace AradaTimeline
         {
             VideoStateAxisControl.VideoControl.InvokeJoinButton();
         }
+
     }
 }
