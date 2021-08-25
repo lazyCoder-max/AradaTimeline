@@ -566,8 +566,7 @@
 
     <!--Context Menu-->
     <ContextMenu x:Key="MarkerMenu">
-        <MenuItem x:Name="setStartingItm" Header="Set as Starting" Cursor="Hand" IsCheckable="True" Checked="setStartingItm_Checked" Unchecked="setStartingItm_Unchecked" Background="#FF333333" Foreground="White" BorderBrush="#FF333333"/>
-        <MenuItem x:Name="removeItm" Header="Remove" Click="removeItm_Click" Background="#FF333333" BorderBrush="#FF333333" Foreground="White"/>
+        <MenuItem x:Name="removeItm" Header="Remove" Click="removeItm_Click" Background="#FF333333" BorderBrush="#FF333333" Foreground="White" ToolTip=""/>
     </ContextMenu>
     <Style x:Key="sliderStyl" TargetType="{x:Type Slider}">
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
@@ -688,7 +687,7 @@
                                                     <Canvas.Resources>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="FontSize" Value="16"/>
-                                                            <Setter Property="Foreground" Value="#D2931A"/>
+                                                            <Setter Property="Foreground" Value="White"/>
                                                         </Style>
                                                     </Canvas.Resources>
                                                 </Canvas>
@@ -754,6 +753,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="225*"/>
                                     <ColumnDefinition Width="571*"/>
+                                    <ColumnDefinition Width="0*"/>
                                 </Grid.ColumnDefinitions>
                                 <Border
                     BorderBrush="Black"
@@ -786,9 +786,11 @@
                             HorizontalAlignment="Right">
                                             <Path Data="M955.346899 811.30069 742.294548 406.649604c-11.56643-22.054295-30.487362-22.054295-42.052768 0l-96.1652 182.621271c-11.628852 22.113647-30.487362 22.113647-42.116213 0L394.764414 271.622304c-11.57257-22.110577-30.364565-22.110577-42.059931 0L68.677661 811.30069c-11.622712 22.053272 1.689479 40.008202 29.765931 40.008202l367.720989 0 233.713926 0 225.703485 0C953.655374 851.307869 966.912305 833.352939 955.346899 811.30069M591.184969 320.909847c46.027289 0 83.208097-33.1981 83.208097-74.108858s-37.180807-74.108858-83.208097-74.108858c-45.911656 0-83.148745 33.1981-83.148745 74.108858S545.273313 320.909847 591.184969 320.909847" Fill="#c8c7c3" />
                                         </Viewbox>
-                                        <Path x:Name="joinBtn" Data="M19 0L19 23.0625C18.949219 23.050781 18.894531 23.039063 18.84375 23.03125L12.40625 16.59375C12.03125 16.199219 11.511719 15.972656 10.96875 15.96875C10.15625 15.976563 9.429688 16.472656 9.128906 17.226563C8.824219 17.980469 9.011719 18.839844 9.59375 19.40625L13.1875 23L2 23C1.9375 22.996094 1.875 22.996094 1.8125 23C0.707031 23.050781 -0.144531 23.988281 -0.09375 25.09375C-0.0429688 26.199219 0.894531 27.050781 2 27L13.1875 27L9.59375 30.59375C8.996094 31.074219 8.726563 31.851563 8.898438 32.597656C9.070313 33.347656 9.652344 33.929688 10.402344 34.101563C11.148438 34.273438 11.925781 34.003906 12.40625 33.40625L18.84375 26.96875C18.894531 26.960938 18.949219 26.949219 19 26.9375L19 50L23 50L23 0 Z M 27 0L27 50L31 50L31 26.96875C31.0625 26.980469 31.125 26.992188 31.1875 27C31.199219 27 31.207031 27 31.21875 27L37.59375 33.40625C38.074219 34.003906 38.851563 34.273438 39.597656 34.101563C40.347656 33.929688 40.929688 33.347656 41.101563 32.597656C41.273438 31.851563 41.003906 31.074219 40.40625 30.59375L36.8125 27L48 27C48.722656 27.011719 49.390625 26.632813 49.753906 26.007813C50.121094 25.386719 50.121094 24.613281 49.753906 23.992188C49.390625 23.367188 48.722656 22.988281 48 23L36.8125 23L40.40625 19.40625C41 18.832031 41.179688 17.957031 40.859375 17.195313C40.542969 16.4375 39.792969 15.949219 38.96875 15.96875C38.445313 15.988281 37.953125 16.214844 37.59375 16.59375L31.15625 23.03125L31.125 23.03125C31.082031 23.039063 31.042969 23.050781 31 23.0625L31 0Z" Fill="#FFC8C7C3" Width="20" Height="20" Stretch="Fill" Margin="10,0,0,0" ToolTip="Save" MouseLeftButtonDown="joinBtn_MouseLeftButtonDown" Initialized="joinBtn_Initialized" MouseEnter="joinBtn_MouseEnter" MouseLeave="joinBtn_MouseLeave" />
                                     </StackPanel>
                                 </Border>
+                                <Grid Margin="453,0,1,0" Grid.Column="1">
+                                    <Button x:Name="joinBtn" Content="Save" Margin="0,1,1,1" Background="#FF345EBE" Foreground="White" BorderBrush="{x:Null}" Initialized="joinBtn_Initialized" Click="joinBtn_Click" HorizontalAlignment="Right" Width="115" />
+                                </Grid>
                             </Grid>
                         </Grid>
                     </Border>
