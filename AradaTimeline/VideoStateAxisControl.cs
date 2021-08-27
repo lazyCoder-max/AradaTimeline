@@ -1306,7 +1306,7 @@ namespace AradaTimeline
         internal Border Trimmed { get; private set; }
         internal bool IsTrimmerLoaded { get; set; } = false;
         internal TextBlock ClipText { get; set; }
-        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="", string thumbnailUrl = "https://i.ytimg.com/vi/Y6-4rybkMHs/maxresdefault.jpg")
+        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="", string thumbnailUrl = "")
         {
             Length = lenght;
             TrimLength = trimLngth;
@@ -1342,11 +1342,18 @@ namespace AradaTimeline
                     Margin = new Thickness(0, 50, 0, 0)
                 };
                 ImageBrush ib = new ImageBrush();
-                ib.ImageSource = new BitmapImage(new Uri(thumbnailUrl));
+                try
+                {
+                    if (!string.IsNullOrEmpty(thumbnailUrl))
+                        ib.ImageSource = new BitmapImage(new Uri(thumbnailUrl));
+                }
+                catch (Exception)
+                {
+                }
                 Middle = new Border()
                 {
                     Width = Length,
-                    Background = string.IsNullOrWhiteSpace(thumbnailUrl)==true? (Brush)(new BrushConverter().ConvertFrom("#FF777777")):ib,
+                    Background = ib.ImageSource==null ? (Brush)(new BrushConverter().ConvertFrom("#FF777777")):ib,
                     BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
                     BorderThickness = new Thickness(0, 0, 1, 0),
                     CornerRadius = new CornerRadius(2, 0, 0, 2),
