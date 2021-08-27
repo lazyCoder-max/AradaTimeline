@@ -501,6 +501,15 @@ namespace AradaTimeline
             nextPoint = 0;
             MoveRight();
         }
+        public void CleanTimeline()
+        {
+            ResetSeekerPosition();
+            EventArgs = null;
+            ClearMarkers();
+            _axisCanvasTimeText.Children.Clear();
+            _clip.Children.Clear();
+            _axisCanvas.Children.Clear();
+        }
         private double nextPoint=0;
         public void MoveRight(double frameRate=25)
         {
@@ -994,10 +1003,13 @@ namespace AradaTimeline
         }
         public void ClearMarkers()
         {
-            Markers[0] = null;
-            Markers[1] = null;
-            _markerLine.Children.Clear();
-            _axisCanvasMarker.Children.Clear();
+            if(Markers!=null)
+            {
+                Markers[0] = null;
+                Markers[1] = null;
+                _markerLine.Children.Clear();
+                _axisCanvasMarker.Children.Clear();
+            }
         }
         private void DrawClip(List<Clip> clips)
         {
