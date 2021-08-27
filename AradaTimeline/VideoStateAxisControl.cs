@@ -503,12 +503,18 @@ namespace AradaTimeline
         }
         public void CleanTimeline()
         {
-            ResetSeekerPosition();
-            EventArgs = null;
-            ClearMarkers();
-            _axisCanvasTimeText.Children.Clear();
-            _clip.Children.Clear();
-            _axisCanvas.Children.Clear();
+            try
+            {
+                ResetSeekerPosition();
+                EventArgs.Clips.Clear();
+                ClearMarkers();
+                _axisCanvasTimeText.Children.Clear();
+                _clip.Children.Clear();
+                _axisCanvas.Children.Clear();
+            }
+            catch (Exception)
+            {
+            }
         }
         private double nextPoint=0;
         public void MoveRight(double frameRate=25)
@@ -1103,9 +1109,13 @@ namespace AradaTimeline
                 {
                     var result = width - 10;
                     if (result > 0)
+                    {
                         clip.Middle.Width = result;
+                    }
                     else
+                    {
                         clip.Middle.Width = 0;
+                    }
                     clip.Length = width;
                 }
                 else
@@ -1296,7 +1306,7 @@ namespace AradaTimeline
         internal Border Trimmed { get; private set; }
         internal bool IsTrimmerLoaded { get; set; } = false;
         internal TextBlock ClipText { get; set; }
-        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="")
+        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="", string thumbnailUrl = "https://i.ytimg.com/vi/Y6-4rybkMHs/maxresdefault.jpg")
         {
             Length = lenght;
             TrimLength = trimLngth;
@@ -1331,10 +1341,12 @@ namespace AradaTimeline
                     CornerRadius = new CornerRadius(2, 0, 0, 2),
                     Margin = new Thickness(0, 50, 0, 0)
                 };
+                ImageBrush ib = new ImageBrush();
+                ib.ImageSource = new BitmapImage(new Uri(thumbnailUrl));
                 Middle = new Border()
                 {
                     Width = Length,
-                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF777777")),
+                    Background = string.IsNullOrWhiteSpace(thumbnailUrl)==true? (Brush)(new BrushConverter().ConvertFrom("#FF777777")):ib,
                     BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
                     BorderThickness = new Thickness(0, 0, 1, 0),
                     CornerRadius = new CornerRadius(2, 0, 0, 2),
