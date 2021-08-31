@@ -1011,8 +1011,7 @@ namespace AradaTimeline
         {
             if(Markers!=null)
             {
-                Markers[0] = null;
-                Markers[1] = null;
+                Markers.Clear();
                 _markerLine.Children.Clear();
                 _axisCanvasMarker.Children.Clear();
             }
