@@ -501,6 +501,21 @@ namespace AradaTimeline
             nextPoint = 0;
             MoveRight();
         }
+        public void CleanTimeline()
+        {
+            try
+            {
+                ResetSeekerPosition();
+                EventArgs.Clips.Clear();
+                ClearMarkers();
+                _axisCanvasTimeText.Children.Clear();
+                _clip.Children.Clear();
+                _axisCanvas.Children.Clear();
+            }
+            catch (Exception)
+            {
+            }
+        }
         private double nextPoint=0;
         public void MoveRight(double frameRate=25)
         {
@@ -994,10 +1009,12 @@ namespace AradaTimeline
         }
         public void ClearMarkers()
         {
-            Markers[0] = null;
-            Markers[1] = null;
-            _markerLine.Children.Clear();
-            _axisCanvasMarker.Children.Clear();
+            if(Markers!=null)
+            {
+                Markers.Clear();
+                _markerLine.Children.Clear();
+                _axisCanvasMarker.Children.Clear();
+            }
         }
         private void DrawClip(List<Clip> clips)
         {
@@ -1091,9 +1108,13 @@ namespace AradaTimeline
                 {
                     var result = width - 10;
                     if (result > 0)
+                    {
                         clip.Middle.Width = result;
+                    }
                     else
+                    {
                         clip.Middle.Width = 0;
+                    }
                     clip.Length = width;
                 }
                 else
@@ -1284,7 +1305,7 @@ namespace AradaTimeline
         internal Border Trimmed { get; private set; }
         internal bool IsTrimmerLoaded { get; set; } = false;
         internal TextBlock ClipText { get; set; }
-        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="")
+        public Clip(double lenght=50, double trimLngth=25, bool isTrimmerloaded=false, string clipName="", string thumbnailUrl = "")
         {
             Length = lenght;
             TrimLength = trimLngth;
@@ -1319,10 +1340,19 @@ namespace AradaTimeline
                     CornerRadius = new CornerRadius(2, 0, 0, 2),
                     Margin = new Thickness(0, 50, 0, 0)
                 };
+                ImageBrush ib = new ImageBrush();
+                try
+                {
+                    if (!string.IsNullOrEmpty(thumbnailUrl))
+                        ib.ImageSource = new BitmapImage(new Uri(thumbnailUrl));
+                }
+                catch (Exception)
+                {
+                }
                 Middle = new Border()
                 {
                     Width = Length,
-                    Background = (Brush)(new BrushConverter().ConvertFrom("#FF777777")),
+                    Background = ib.ImageSource==null ? (Brush)(new BrushConverter().ConvertFrom("#FF777777")):ib,
                     BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#FF000000")),
                     BorderThickness = new Thickness(0, 0, 1, 0),
                     CornerRadius = new CornerRadius(2, 0, 0, 2),

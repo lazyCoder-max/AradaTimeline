@@ -602,16 +602,16 @@
                             </Grid.ColumnDefinitions>
 
                             <Border  Grid.Row="1"
-                Grid.RowSpan="2"
-                BorderBrush="Black"
-                BorderThickness="0"
-                CornerRadius="5 5 0 0">
+                                Grid.RowSpan="2"
+                                BorderBrush="Black"
+                                BorderThickness="0"
+                                CornerRadius="5 5 0 0">
                                 <ScrollViewer
-                    x:Name="Z_Parid_scrollViewer"
-                    Background="#22272a"
-                    CanContentScroll="True"
-                    HorizontalScrollBarVisibility="Visible"
-                    VerticalScrollBarVisibility="Hidden" Focusable="False">
+                                    x:Name="Z_Parid_scrollViewer"
+                                    Background="#22272a"
+                                    CanContentScroll="True"
+                                    HorizontalScrollBarVisibility="Visible"
+                                    VerticalScrollBarVisibility="Hidden" Focusable="False">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="25" />
@@ -620,7 +620,9 @@
                                             <RowDefinition />
                                         </Grid.RowDefinitions>
                                         <Canvas x:Name="Z_Parid__axisCanvasTimeText"
-                            Background="#22272a" MouseLeftButtonDown="Z_Parid__axisCanvasTimeText_MouseLeftButtonDown" MouseLeftButtonUp="Z_Parid__axisCanvasTimeText_MouseLeftButtonUp">
+                                                Background="#22272a" 
+                                                MouseLeftButtonDown="Z_Parid__axisCanvasTimeText_MouseLeftButtonDown" 
+                                                MouseLeftButtonUp="Z_Parid__axisCanvasTimeText_MouseLeftButtonUp">
                                             <Canvas.Resources>
                                                 <Style TargetType="{x:Type TextBlock}">
                                                     <Setter Property="FontSize" Value="14" />
@@ -642,13 +644,13 @@
                                             </Canvas.Resources>
                                         </Canvas>
                                         <Border
-                            Grid.Row="1"
-                            Margin="6,0,6,0"
-                            Panel.ZIndex="4">
+                                            Grid.Row="1"
+                                            Margin="6,0,6,0"
+                                            Panel.ZIndex="4">
                                             <Canvas
-                                x:Name="Z_Parid_axisCanvas"
-                                HorizontalAlignment="Stretch"
-                                Background="#141414">
+                                                x:Name="Z_Parid_axisCanvas"
+                                                HorizontalAlignment="Stretch"
+                                                Background="#141414">
                                                 <Canvas.Resources>
                                                     <Style TargetType="{x:Type Line}">
                                                         <Setter Property="Stroke" Value="#c8c7c3" />
@@ -701,10 +703,10 @@
                                             </Canvas>
                                         </Border>
                                         <Canvas
-                            x:Name="Z_Parid_timePanel"
-                            Grid.Row="0"
-                            Grid.RowSpan="3"
-                            Panel.ZIndex="5">
+                                            x:Name="Z_Parid_timePanel"
+                                            Grid.Row="0"
+                                            Grid.RowSpan="3"
+                                            Panel.ZIndex="5">
                                             <Canvas x:Name="Z_Parid_markerLine">
                                                 <Canvas.Resources>
                                                     <Style TargetType="{x:Type Rectangle}">
@@ -716,33 +718,33 @@
                                             </Canvas>
                                             <Canvas x:Name="Z_Parid_timeLine">
                                                 <Rectangle
-                                    Width="1"
-                                    Height="{Binding ActualHeight, ElementName=Z_Parid_scrollViewer}"
-                                    Margin="5,3,0,0"
-                                    Fill="Red" />
+                                                    Width="1"
+                                                    Height="{Binding ActualHeight, ElementName=Z_Parid_scrollViewer}"
+                                                    Margin="5,3,0,0"
+                                                    Fill="Red" />
                                                 <Grid
-                                    x:Name="Z_Parid_timePoint"
-                                    Width="12"
-                                    Height="15"
-                                    Margin="-0.5,0,0,0"
-                                    Cursor="Hand">
+                                                    x:Name="Z_Parid_timePoint"
+                                                    Width="12"
+                                                    Height="15"
+                                                    Margin="-0.5,0,0,0"
+                                                    Cursor="Hand">
                                                     <Polygon
-                                        Fill="#FFD21A1A"
-                                        Points="1,0 1,10 6,15 11,10 11,0"
-                                        StrokeThickness="0" />
+                                                        Fill="#FFD21A1A"
+                                                        Points="1,0 1,10 6,15 11,10 11,0"
+                                                        StrokeThickness="0" />
                                                     <Rectangle
-                                        Width="6"
-                                        Height="1"
-                                        Margin="0,0,0,6"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Fill="Black" />
+                                                        Width="6"
+                                                        Height="1"
+                                                        Margin="0,0,0,6"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Fill="Black" />
                                                     <Rectangle
-                                        Width="6"
-                                        Height="1"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Fill="Black" />
+                                                        Width="6"
+                                                        Height="1"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Fill="Black" />
                                                 </Grid>
                                             </Canvas>
                                         </Canvas>
@@ -756,34 +758,33 @@
                                     <ColumnDefinition Width="0*"/>
                                 </Grid.ColumnDefinitions>
                                 <Border
-                    BorderBrush="Black"
-                    Background="#22272a"
-                    BorderThickness="0,0,0,1" Margin="0,0,7,0">
+                                    BorderBrush="Black"
+                                    Background="#22272a"
+                                    BorderThickness="0,0,0,1" Margin="0,0,7,0">
                                     <StackPanel
-                        Grid.Column="0"
-                        Margin="24,0,0,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal" Width="184">
+                                        Grid.Column="0"
+                                        Margin="24,0,0,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal" Width="184">
                                         <Viewbox
-                            Width="15"
-                            Height="15"
-                            HorizontalAlignment="Left">
+                                            Width="15"
+                                            Height="15"
+                                            HorizontalAlignment="Left">
                                             <Path Data="M955.346899 811.30069 742.294548 406.649604c-11.56643-22.054295-30.487362-22.054295-42.052768 0l-96.1652 182.621271c-11.628852 22.113647-30.487362 22.113647-42.116213 0L394.764414 271.622304c-11.57257-22.110577-30.364565-22.110577-42.059931 0L68.677661 811.30069c-11.622712 22.053272 1.689479 40.008202 29.765931 40.008202l367.720989 0 233.713926 0 225.703485 0C953.655374 851.307869 966.912305 833.352939 955.346899 811.30069M591.184969 320.909847c46.027289 0 83.208097-33.1981 83.208097-74.108858s-37.180807-74.108858-83.208097-74.108858c-45.911656 0-83.148745 33.1981-83.148745 74.108858S545.273313 320.909847 591.184969 320.909847" Fill="#c8c7c3" />
                                         </Viewbox>
                                         <Slider
-                            x:Name="Z_Parid_zoomSlider"
-                            Width="96"
-                            Margin="10,3,10,0"
-                            Maximum="{Binding ScrollMaximum,ElementName=VideoST}"
-                            Value="{Binding ScrollValue,ElementName=VideoST}"
-                            Minimum="1" Focusable="False"
-                            />
+                                            x:Name="Z_Parid_zoomSlider"
+                                            Width="96"
+                                            Margin="10,3,10,0"
+                                            Maximum="{Binding ScrollMaximum,ElementName=VideoST}"
+                                            Value="{Binding ScrollValue,ElementName=VideoST}"
+                                            Minimum="1" Focusable="False"/>
                                         <Viewbox
-                            Width="20"
-                            Height="20"
-                            Margin="0,0,0,2"
-                            HorizontalAlignment="Right">
+                                            Width="20"
+                                            Height="20"
+                                            Margin="0,0,0,2"
+                                            HorizontalAlignment="Right">
                                             <Path Data="M955.346899 811.30069 742.294548 406.649604c-11.56643-22.054295-30.487362-22.054295-42.052768 0l-96.1652 182.621271c-11.628852 22.113647-30.487362 22.113647-42.116213 0L394.764414 271.622304c-11.57257-22.110577-30.364565-22.110577-42.059931 0L68.677661 811.30069c-11.622712 22.053272 1.689479 40.008202 29.765931 40.008202l367.720989 0 233.713926 0 225.703485 0C953.655374 851.307869 966.912305 833.352939 955.346899 811.30069M591.184969 320.909847c46.027289 0 83.208097-33.1981 83.208097-74.108858s-37.180807-74.108858-83.208097-74.108858c-45.911656 0-83.148745 33.1981-83.148745 74.108858S545.273313 320.909847 591.184969 320.909847" Fill="#c8c7c3" />
                                         </Viewbox>
                                     </StackPanel>
